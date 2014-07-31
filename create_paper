@@ -1,0 +1,5 @@
+#!/bin/bash
+
+Rscript -e 'library(knitr); knit("chogg_gaussian_oscillators_2014.Rnw")' && \
+pdflatex chogg_gaussian_oscillators_2014 && \
+pdflatex chogg_gaussian_oscillators_2014

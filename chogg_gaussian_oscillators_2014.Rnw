@@ -1,0 +1,8 @@
+\documentclass[12pt,letterpaper]{article}
+\begin{document}
+\title{Visualizing uncertain curves and surfaces via Gaussian Oscillators}
+\author{Charles~R.~Hogg~III}
+\date{August~2014}
+\maketitle
+
+\end{document}
