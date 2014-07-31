@@ -5,4 +5,85 @@
 \date{August~2014}
 \maketitle
 
+\section{Introduction}
+\label{sec:introduction}
+
+(What's the idea?  What am I trying to do?)
+
+(Discuss older methods; pros and cons.)
+
+((Trigonometric interpolation (Skilling; ESG).  Use figure to show percentiles.))
+
+((Great-circles by Hennig.  For the first time, smooth and keyframe-free.))
+
+\section{Gaussian Oscillators}
+\label{sec:gaussian_oscillators}
+
+(Explain the idea of a Gaussian Oscillator.)
+
+(Explain they are a specific kind of time-domain Gaussian processes, but there may be more/less efficient ways to compute them.)
+
+(Note: Hennig's great circles are not quite GOs, because the 1-D Gaussians are not independent; constrained to have constant mean.)
+
+\section{A New Way to Generate Animations}
+\label{sec:a_new_way_to_generate_animations}
+
+(Introduce my approach)
+
+(Relationship to Fourier transforms)
+
+(Mention non-looping version)
+
+\section{Comparison}
+\label{sec:comparison}
+
+\subsection{Kinematic Properties}
+\label{sub:kinematic_properties}
+
+(Consider motion as a physical object; velocity and acceleration.)
+
+\subsection{Statistical Properties}
+\label{sub:statistical_properties}
+
+\subsection{Computational Properties}
+\label{sub:computational_properties}
+
+(How many random numbers does it take?)
+
+\section{Future Work}
+\label{sec:future_work}
+
+\subsection{Animating non-Gaussian distributions}
+\label{sub:animating_non_gaussian_distributions}
+
+(``Nearly Gaussian'': time warping.)
+
+Other challenging cases:
+
+(Discrete distributions.)
+
+((Obviously, we can't animate these continuously.))
+
+((However, maybe special cases can kinda sorta work, e.g., Poisson/Anscombe transform.))
+
+(Disconnected/thinly connected regions.)
+
+((Maybe animate each mode/region separately.))
+
+\subsection{Alternative time-domain covariance functions}
+\label{sub:alternative_time_domain_covariance_functions}
+
+(Compact support: endless exploration!)
+
+(Challenging to do in R: no framebuf support.)
+
+((However, could output javascript with d3.js!))
+
+\section{Conclusions}
+\label{sec:conclusions}
+
 \end{document}
+
+Ideas which need a home
+
+(Looping vs. non-looping)
