@@ -23,7 +23,50 @@ set.seed(1)
 
 (What's the idea?  What am I trying to do?)
 
-(Discuss older methods; pros and cons.)
+The present author is aware of two main approaches in the literature.
+
+Historically, most animations have been based on \textit{interpolation}\footnote{Get Skilling and ESG references; cite them here.}.
+A series of independent draws from the Gaussian are generated and displayed at regular time intervals; these are called the \textit{keyframes}.
+The frames at intervening times are weighted averages of the nearest two keyframes.
+The weighting favours the first keyframe at the beginning of the interval, and the second keyframe near the end, so that the curve or surface changes continuously from one keyframe to the next.
+Figure \ref{fig:interpolation}(a) illustrates the idea for a simple 1-dimensional Gaussian using three possible interpolating families: \textit{linear}, \textit{cubic spline}, and \textit{trigonometric}.
+
+<<interpolation_plots, include=FALSE>>=
+source('interpolation.R')
+
+quantiles <- c(0.1, 0.5, 0.9)
+num.interpolated.curves <- 5e2  # Make it bigger later
+num.points <- 500
+num.keyframes <- 4
+interpolation.caption <- sprintf(
+    paste("Interpolation illustrated for a standard 1-D Gaussian.",
+          "(a) A single set of normal draws interpolated by three methods.",
+          "(b) Pointwise quantiles for interpolating %s random draws."),
+    formatC(num.interpolated.curves, big.mark=',', format='fg'))
+
+interp.matrix.functions <- list(Linear=InterpLinear,
+                                Spline=InterpSpline,
+                                Trigonometric=InterpTrig)
+
+p.concept <- InterpolationConceptPlot(
+    interp.matrix.functions=interp.matrix.functions,
+    n.points=num.points,
+    n.keyframes=num.keyframes)
+
+p.interp <- InterpolationQuantilePlot(
+    interp.matrix.functions=interp.matrix.functions,
+    quantiles=quantiles,
+    n.draws=num.interpolated.curves,
+    n.points=num.points,
+    n.keyframes=num.keyframes)
+@
+
+<<interpolation, cache=FALSE, echo=FALSE, fig.cap=interpolation.caption>>=
+grid.arrange(p.concept,
+             p.interp,
+             ncol=1)
+@
+
 
 ((Trigonometric interpolation (Skilling; ESG).  Use figure to show percentiles.))
 
