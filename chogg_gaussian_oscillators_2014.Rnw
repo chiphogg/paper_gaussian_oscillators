@@ -101,6 +101,30 @@ grid.arrange(p.concept,
 \subsection{Statistical Properties}
 \label{sub:statistical_properties}
 
+<<ks_plots, include=FALSE>>=
+# The number of Gaussian Oscillators of each type to construct.  Increasing
+# this number gives more reliable density estimation.
+num_oscillators <- 1000
+
+# The number of equivalent independent normal draws to test.
+equivalent_draws <- c(2, 10, 50)
+names(equivalent_draws) <- equivalent_draws
+
+# Utility function to compute the KS statistic on each column of a matrix.
+KsOnColumns <- function(m) {
+  apply(m, 2, function(v) ks.test(v, pnorm)$statistic)
+}
+
+# Create the desired number of copies of each oscillator.  First, do
+# independent Gaussian draws as a reference point.
+independent <- lapply(equivalent_draws,
+                      function(n.draws) {
+                        KsOnColumns(matrix(rnorm(n=n.draws * num_oscillators),
+                                           ncol=num_oscillators))
+                      })
+
+@
+
 \subsection{Computational Properties}
 \label{sub:computational_properties}
 
