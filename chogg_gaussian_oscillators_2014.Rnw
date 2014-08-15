@@ -5,6 +5,19 @@
 \date{August~2014}
 \maketitle
 
+<<global_setup, include=FALSE>>=
+require(ggplot2)
+require(knitr)
+require(gridExtra)
+
+# Smart caching.
+opts_chunk$set(cache=TRUE, autodep=TRUE)
+
+theme_set(theme_grey(base_size=12))
+
+set.seed(1)
+@
+
 \section{Introduction}
 \label{sec:introduction}
 
