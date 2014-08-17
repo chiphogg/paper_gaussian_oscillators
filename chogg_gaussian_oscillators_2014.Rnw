@@ -5,10 +5,12 @@
 \date{August~2014}
 \maketitle
 
-<<global_setup, include=FALSE>>=
+<<global_setup, cache=FALSE, include=FALSE>>=
 require(ggplot2)
 require(knitr)
 require(gridExtra)
+
+source('interpolation.R')
 
 # Smart caching.
 opts_chunk$set(cache=TRUE, autodep=TRUE)
@@ -32,8 +34,6 @@ The weighting favours the first keyframe at the beginning of the interval, and t
 Figure \ref{fig:interpolation}(a) illustrates the idea for a simple 1-dimensional Gaussian using three possible interpolating families: \textit{linear}, \textit{cubic spline}, and \textit{trigonometric}.
 
 <<interpolation_plots, include=FALSE>>=
-source('interpolation.R')
-
 quantiles <- c(0.1, 0.5, 0.9)
 num.interpolated.curves <- 5e2  # Make it bigger later
 num.points <- 500
