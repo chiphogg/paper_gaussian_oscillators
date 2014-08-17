@@ -140,3 +140,11 @@ InterpSpline <- function(n.frames, t.out) {
   }
   sapply(1:n.frames, SplineBasis)
 }
+DelocalizedMatrix <- function(n.frames, t.out) {
+  # n.frames must be even (we need as many sines as cosines).
+  stopifnot(n.frames %% 2 == 0)
+  N <- n.frames / 2
+  cbind(
+    outer(t.out, 1:N, function(t, i) sin(pi * i * t / N)),
+    outer(t.out, N:1, function(t, i) cos(pi * i * t / N))) / sqrt(N)
+}
