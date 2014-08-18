@@ -15,9 +15,11 @@ source('interpolation.R')
 # Smart caching.
 opts_chunk$set(cache=TRUE, autodep=TRUE)
 
+# ggplot2 options.
 theme_set(theme_grey(base_size=12))
 line.size <- 1
 
+# For reproducibility.
 set.seed(1)
 @
 
