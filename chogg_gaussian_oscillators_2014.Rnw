@@ -16,6 +16,7 @@ source('interpolation.R')
 opts_chunk$set(cache=TRUE, autodep=TRUE)
 
 theme_set(theme_grey(base_size=12))
+line.size <- 1
 
 set.seed(1)
 @
@@ -51,19 +52,20 @@ interp.matrix.functions <- list(Linear=InterpLinear,
 p.concept <- InterpolationConceptPlot(
     interp.matrix.functions=interp.matrix.functions,
     n.points=num.points,
-    n.keyframes=num.keyframes)
-
+    n.keyframes=num.keyframes,
+    size=line.size)
 p.interp <- InterpolationQuantilePlot(
     interp.matrix.functions=interp.matrix.functions,
     quantiles=quantiles,
     n.draws=num.interpolated.curves,
     n.points=num.points,
-    n.keyframes=num.keyframes)
+    n.keyframes=num.keyframes,
+    size=line.size)
 @
 
 <<interpolation, cache=FALSE, echo=FALSE, fig.cap=interpolation.caption>>=
-grid.arrange(p.concept,
-             p.interp,
+grid.arrange(p.concept + scale_colour_brewer('', palette='Set2'),
+             p.interp + scale_colour_brewer('', palette='Set2'),
              ncol=1)
 @
 
@@ -178,19 +180,36 @@ ks.figure.caption <- sprintf(
 <<ks_figure, echo=FALSE, cache=FALSE, fig.cap=ks.figure.caption>>=
 KsFigure <- function(i) {
   d <- ks.all[i, ]
-  p <- (ggplot(data=d, aes(x=x, y=..density.., colour=type, linetype=num.draws))
-        + geom_freqpoly(binwidth=diff(range(d$x))/60, size=1)
+  p <- (ggplot(data=d, aes(x=x, y=..density.., colour=type,
+                           group=interaction(type, num.draws)))
+        + geom_freqpoly(binwidth=diff(range(d$x))/60, size=line.size)
         + theme(legend.position='none')
-        + scale_colour_brewer(palette='Set2')
-        + scale_linetype_manual(values=setNames(c(1, 2, 4),
-                                                equivalent_draws))
+        + scale_colour_brewer('', palette='Set2')
+        + scale_x_continuous('Kolmogorov-Smirnov statistic')
+        + scale_y_continuous('Density')
         )
 }
+independent.peaks <- data.frame(draws=equivalent_draws,
+                                ks=c(0.5, 0.25, 0.125),
+                                density=c(3.7, 5.5, 11.5))
+colour.legend <- theme(legend.justification=c(1, 1),
+                       legend.position=c(1, 1),
+                       legend.margin=unit(0, 'mm'),
+                       legend.title=element_blank())
 grid.arrange(ncol=2,
-             KsFigure(which(ks.all$type == 'Independent Draws')),
-             KsFigure(which(ks.all$num.draws == 2)),
-             KsFigure(which(ks.all$num.draws == 10)),
-             KsFigure(which(ks.all$num.draws == 50)))
+             KsFigure(which(ks.all$type == 'Independent Draws'))
+                 + geom_text(inherit.aes=FALSE, hjust=0, data=independent.peaks,
+                             aes(label=draws, x=ks, y=density))
+                 + ggtitle('(a) Independent draws'),
+             KsFigure(which(ks.all$num.draws == 2))
+                 + colour.legend
+                 + ggtitle(sprintf('(b) %d draws', equivalent_draws[1])),
+             KsFigure(which(ks.all$num.draws == 10))
+                 + colour.legend
+                 + ggtitle(sprintf('(c) %d draws', equivalent_draws[2])),
+             KsFigure(which(ks.all$num.draws == 50))
+                 + colour.legend
+                 + ggtitle(sprintf('(d) %d draws', equivalent_draws[3])))
 @
 
 \subsection{Computational Properties}

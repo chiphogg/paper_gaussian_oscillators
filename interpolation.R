@@ -21,7 +21,8 @@ TimeSequence <- function(n.keyframes, n.points, loop=FALSE) {
 InterpolationConceptPlot <- function(
     interp.matrix.functions,
     n.points,
-    n.keyframes) {
+    n.keyframes,
+    size) {
   # A figure to demonstrate the concept of interpolation: generate random
   # points; interpolate between them.
   #
@@ -33,6 +34,7 @@ InterpolationConceptPlot <- function(
   #     computation times.
   #   n.keyframes:  The number of keyframes -- i.e., independent Gaussian draws
   #     -- to use.
+  #   size:  The thickness of the lines.
   #
   # Returns:
   #   A ggplot2 plot object showing random points, and different methods of
@@ -44,7 +46,7 @@ InterpolationConceptPlot <- function(
                              function(FUN) FUN(n.keyframes, t) %*% seeds)))
   dfm <- melt(d.f, id.vars='t')
   (ggplot(data=dfm, aes(x=t, y=value))
-    + geom_line(aes(colour=variable))
+    + geom_line(aes(colour=variable), size=size)
     + geom_point(data=seed.data)
     )
 }
@@ -70,7 +72,7 @@ RowQuantileDataFrame <- function(mat, t, quantiles) {
 }
 
 InterpolationQuantilePlot <- function(
-    interp.matrix.functions, quantiles, n.draws, n.points, n.keyframes) {
+    interp.matrix.functions, quantiles, n.draws, n.points, n.keyframes, size) {
   # Show selected quantiles for various methods of interpolation.
   #
   # Args:
@@ -84,6 +86,7 @@ InterpolationQuantilePlot <- function(
   #     computation times.
   #   n.keyframes:  The number of keyframes -- i.e., independent Gaussian draws
   #     -- to use.
+  #   size:  The thickness of the lines.
   #
   # Returns:
   #   A ggplot2 plot object showing the quantiles as a function of time.  (This
@@ -101,7 +104,7 @@ InterpolationQuantilePlot <- function(
     d.frame <- rbind(d.frame, new.frame)
   }
   (ggplot(data=d.frame, aes(x=t, y=y))
-    + geom_line(aes(group=paste0(group, label), colour=label))
+    + geom_line(aes(group=paste0(group, label), colour=label), size=size)
     )
 }
 
