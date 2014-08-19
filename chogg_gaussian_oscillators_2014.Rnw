@@ -1,4 +1,5 @@
 \documentclass[12pt,letterpaper]{article}
+\usepackage{amsmath}
 \begin{document}
 \title{Visualizing uncertain curves and surfaces via Gaussian Oscillators}
 \author{Charles~R.~Hogg~III}
@@ -26,7 +27,25 @@ set.seed(1)
 \section{Introduction}
 \label{sec:introduction}
 
-(What's the idea?  What am I trying to do?)
+Curves and surfaces abound in the sciences.
+It is vital to quantify their uncertainty -- usually, by computing a probability distribution.
+It is equally vital to visualize that uncertainty.
+Here, curves and surfaces present considerable challenges.
+
+The most common technique is to plot upper and lower credible intervals along with the estimated curve.
+This shows considerable information at a glance.
+However, as a pointwise technique, it discards correlations between points: for example, it cannot distinguish between slowly and rapidly varying curves.
+Also, this technique is difficult to apply to surfaces, since they can easily obscure one another.
+
+Showing individual draws from the distribution addresses the former problem nicely.
+However, there is a fundamental tension: showing too few curves will not fully represent the distribution, while showing too many quickly clutters the figure.
+What's more, the problem of obscured surfaces is only made more acute.
+
+The solution is to show the draws one at a time.
+
+((Elaborate.))
+
+(Don't forget to mention how this connects to Gaussians!  GPs, and modes in parameter space.)
 
 The present author is aware of two main approaches in the literature.
 
@@ -71,10 +90,22 @@ grid.arrange(p.concept + scale_colour_brewer('', palette='Set2'),
              ncol=1)
 @
 
+Unfortunately, interpolation can easily yield incorrect statistics between the keyframes.
+In particular, the variance is usually underestimated.
+Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach correctly preserves statistical properties between keyframes.
 
-((Trigonometric interpolation (Skilling; ESG).  Use figure to show percentiles.))
+((Say who did this.))
 
-((Great-circles by Hennig.  For the first time, smooth and keyframe-free.))
+((Mention there are keyframes; they are bad.))
+
+An important advance was made by Hennig (cite), who generated circular paths with marginal normal distributions.
+A draw from the $m$-dimensional Gaussian formed one point on the circle.
+A second independent draw set the direction of traversal.
+
+Since no point on a circle is special, every frame in these circular timetraces is fully equivalent to every other.
+To the best of the author's knowledge, Hennig's paper is the first published example of a smooth, keyframe-free Gaussian animation.
+
+(Advantages and disadvantages of each.  Then say how mine is best of both worlds.)
 
 \section{Gaussian Oscillators}
 \label{sec:gaussian_oscillators}
@@ -88,24 +119,83 @@ grid.arrange(p.concept + scale_colour_brewer('', palette='Set2'),
 \section{A New Way to Generate Animations}
 \label{sec:a_new_way_to_generate_animations}
 
-(Introduce my approach)
+The new animations in this paper are most naturally compared to the interpolation technique.
+Both techniques involve generating some number $N$ of i.i.d. standard normal variates, then deterministically producing a continuous timetrace.
+With interpolation, each variate influences only the small region between its nearest neighbours.
+In this paper's technique, each variate's invluence is spread out across the entire timetrace.
 
-(Relationship to Fourier transforms)
+Explicitly, given $N$ i.i.d. normal variates $\{\epsilon_1, \cdots, \epsilon_n\}$, the corresponding \textit{delocalized oscillator} $f(t)$ is given by
+\begin{equation}
+  \label{eqn:delocalized}
+  f(t) = \sqrt{\frac{2}{N}} \sum\limits_{i=1}^{N/2} \left[
+  \epsilon_{2i-1} \sin \left( \frac{2 \pi i t}{N} \right) +
+  \epsilon_{2i} \cos \left( \frac{2 \pi i t}{N} \right)
+\right].
+\end{equation}
+Note that this is only defined for even $N$, since every $\sin(\cdot)$ needs a corresponding $\cos(\cdot)$.
+Considering the application, this restriction seems mild.
+
+The formula \ref{eqn:delocalized} superficially resembles a Fourier series, in that it is a weighted sum of sines and cosines.
+
+((Elaborate on differences))
+
+(((more terms -> longer period, NOT finer motion)))
+
+(((orthogonality: red herring! not really needed for different periods)))
+
+(((coefficients also decrease with increasing $N$)))
+
+To verify that $f(t)$ is a Gaussian Oscillator, the relations $\langle \epsilon_i \rangle = 0$ and $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$ will be useful.
+First, note that $f(t)$ is a sum of Gaussian random variables at each time $t$; therefore, $f(t)$ also has a Gaussian distribution.
+This means that its mean $\langle f(t) \rangle$ and covariance $\langle f(t_1) f(t_2) \rangle$ characterize it completely.
+
+From the definition in Equation \ref{eqn:delocalized}, and the property $\langle \epsilon_i \rangle = 0$, it is clear that $\langle f(t) \rangle = 0$.
+The covariance requires more work.
+It involves a double sum, but since $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$, only the $i=j$ terms survive:
+\begin{align}
+  \langle f(t_1) f(t_2) \rangle &= \frac{2}{N} \sum\limits_{i=1}^{N/2}
+    \left[
+      \sin \left( \frac{2 \pi i t_1}{N} \right) \sin \left( \frac{2 \pi i t_2}{N} \right) +
+      \cos \left( \frac{2 \pi i t_1}{N} \right) \cos \left( \frac{2 \pi i t_2}{N} \right)
+    \right] \\
+  &= \frac{2}{N} \sum\limits_{i=1}^{N/2} \cos
+    \left( \frac{2 \pi i (t_2 - t_1)}{N} \right).
+\end{align}
+Note that this depends only on $(t_2 - t_1)$: these Gaussian Oscillators are \textit{stationary}, so no keyframes are singled out.
 
 (Mention non-looping version)
 
 \section{Comparison}
 \label{sec:comparison}
 
+\subsection{Basis functions}
+\label{sub:basis_functions}
+
 \subsection{Kinematic Properties}
 \label{sub:kinematic_properties}
 
-(Consider motion as a physical object; velocity and acceleration.)
+One way to compare Gaussian Oscillators is to compute their most basic kinematic properties: velocity and acceleration.
+These distributions capture information which eludes the marginal \textit{position} distribution (which is the same by definition for all Gaussian Oscillators).
+
+Figure ((make-a-figure!!)) shows the results.
+The velocity distribution for interpolation changes discontinuously at every keyframe.
+This makes the acceleration effectively infinite there.
+At every keyframe, the oscillator receives a jarring ``impulse'' which distractingly changes its motion.
+
+By contrast, the delocalized oscillators undergo perfectly smooth changes in motion.
+In fact, their velocity and acceleration distributions are the same as the position distribution (up to a change of scale).
 
 \subsection{Statistical Properties}
 \label{sub:statistical_properties}
 
-<<ks_plots, include=FALSE>>=
+Gaussian oscillators are marginally Gaussian by definition.
+However, this property applies to \textit{populations} of oscillators, not the individual oscillators themselves.
+
+To see this point starkly, consider the simplest Gaussian Oscillator: a single Gaussian draw, constant for all time.
+The marginal distribution over all such oscillators is obviously the standard Gaussian at all times.
+But the marginal distribution for a \textit{single} oscillator is a point mass, which is very different from a Gaussian.
+
+<<ks_data, include=FALSE>>=
 # The number of Gaussian Oscillators of each type to construct.  Increasing
 # this number gives more reliable density estimation.
 num_oscillators <- 10000
@@ -179,7 +269,27 @@ ks.figure.caption <- sprintf(
     equivalent_draws[3])
 @
 
-<<ks_figure, echo=FALSE, cache=FALSE, fig.cap=ks.figure.caption>>=
+This motivates us to evaluate a family of Gaussian Oscillators by how faithfully its members represent the standard Gaussian distribution.
+The Kolmogorov-Smirnov (KS) statistic -- essentially, the widest vertical gap between two CDFs -- is a convenient, widely-used technique to compare two distributions.
+The KS \textit{distribution} summarizes the fidelity of a Gaussian Oscillator \textit{family}: distributions which place more mass on smaller values indicate more faithful families.
+
+As a basis for comparison, consider the KS distribution for a given number $N$ of independent normal draws, without interpolation.
+Larger samples represent their distributions more faithfully; therefore, we expect their KS distributions to shift towards zero.
+Figure \ref{fig:ks_distribution}(a) shows the results for \Sexpr{equivalent_draws[1]}, \Sexpr{equivalent_draws[2]}, and \Sexpr{equivalent_draws[3]} draws.
+It is clear that larger samples indeed have smaller KS statistics.
+
+The next three subfigures compare two types of Gaussian Oscillator\footnote{
+  We cannot include the Great Circles approach of (cite Hennig), since technically they are not Gaussian Oscillators.
+  Individual dimensions are not independent; they are constrained so that the overall magnitude stays constant.
+  However, each dimension is \textit{marginally} equivalent to the $N=2$ delocalized oscillators.
+  Thus, the purple curve in Figure \ref{fig:ks_distribution}(b) can be taken to apply to Hennig's work, but the subsequent purple curves cannot (since Great Circles are restricted to $N=2$).
+} -- trigonometric interpolation, and the delocalized oscillators this paper introduces -- to the equivalent number of independent draws.
+The figure shows that interpolating between the independent draws (orange curve) more faithfully represents the normal distribution than the independent draws themselves (green curve), since the orange curve puts more mass on lower KS values.
+However, the delocalized oscillators (purple curve) are significantly better than either in every case shown here.
+
+Thus, not only is their motion more smooth and natural, but they represent the underlying distribution more faithfully.
+
+<<ks_distribution, echo=FALSE, cache=FALSE, fig.cap=ks.figure.caption>>=
 KsFigure <- function(i) {
   d <- ks.all[i, ]
   p <- (ggplot(data=d, aes(x=x, y=..density.., colour=type,
@@ -214,10 +324,22 @@ grid.arrange(ncol=2,
                  + ggtitle(sprintf('(d) %d draws', equivalent_draws[3])))
 @
 
-\subsection{Computational Properties}
-\label{sub:computational_properties}
+The distributions in Figure \ref{fig:ks_distribution}(b) have several interesting features.
+To understand this advantage, consider the $N=2$ case in Figure \ref{fig:ks_distribution}(b).
 
-(How many random numbers does it take?)
+Both the independent draws and the trigonometric interpolation place 50\% of their total mass on KS values above 0.5.
+This is because two random normal draws have the same sign with probability 0.5.
+When this happens, interpolation cannot generate values of the opposite sign, but these account for half the total mass of the standard normal.
+
+By contrast, the delocalized oscillators can never yield KS values above 0.5.
+This is because the linear combination of sine and cosine is equivalent to a sine curve with a random amplitude and phase (and the latter does not matter when we average over a whole period).
+Hence, both positive and negative values are always included\footnote{The only exception is the delocalized oscillator which is identically zero at all times, but this happens with probability 0.}.
+
+In short: the probability for the KS value to be worse than 0.5 is 0 for delocalized oscillators, and 0.5 for the alternatives.
+This helps explain the considerable advantage for the former.
+
+Delocalized oscillators retain this advantage for higher values of $N$, although the reasons why are less clear.
+In any case, the basic story remains the same: interpolating between independent draws brings a marginal increase in fidelity, while delocalizing them brings a significant increase.
 
 \section{Future Work}
 \label{sec:future_work}
@@ -225,19 +347,33 @@ grid.arrange(ncol=2,
 \subsection{Animating non-Gaussian distributions}
 \label{sub:animating_non_gaussian_distributions}
 
-(``Nearly Gaussian'': time warping.)
+This paper has shown how to visualize arbitrary Gaussian distributions using continuous animations.
+The question naturally arises which other distributions can be visualized in this way.
+Some distributions are clearly impossible, but several others seem tractable.
 
-Other challenging cases:
+First, consider a ``nearly-Gaussian'' distribution, i.e., one whose probability density $\rho(x)$ differs from the Gaussian density $\nu(x)$ by some known factor (which naturally depends on $x$).
+The time which a standard Gaussian Oscillator spends at $x$ is proportional to $\nu(x)$.
+To make it proportional to $\rho(x)$ instead, we can modulate the delay before the next frame by a factor $(\rho(x) / \nu(x))$.
+In essence, we are warping time to capture the subtle departures of the true distribution from the Gaussian.
 
-(Discrete distributions.)
+A more challenging case is distributions with multiple regions that are connected only thinly (or even disconnected entirely).
+Time warping seems infeasible here for several reasons.
+First, the oscillator would need to move infinitely quickly in the intermodal region.
+Furthermore, any single Gaussian is likely to be a very poor approximation to the distribution as a whole.
 
-((Obviously, we can't animate these continuously.))
+A better alternative would be to show a separate animation for each region.
+A Gaussian can better approximate individual modes rather than the entire distribution.
+And the total probability mass of each mode can be indicated beside its animation.
 
-((However, maybe special cases can kinda sorta work, e.g., Poisson/Anscombe transform.))
+Discrete distributions present a greater challenge: obviously, they cannot be represented by continuous animations.
+However, even here there are special cases which admit partial success.
+Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\footnote{cite my paper?}).
+The Anscombe transform\footnote{citey cite} takes Poisson-distributed data into Gaussian-distributed to an excellent approximation.
+One could animate the transformed distribution with Gaussian Oscillators, ``un-transform'' the result, and round to the nearest integer.
+While the result would not be truly continuous, it would change in an ordered way which is easy for the eye to follow.
 
-(Disconnected/thinly connected regions.)
-
-((Maybe animate each mode/region separately.))
+Animations are highly useful for visualizing complex distributions.
+With the Gaussian case now well in hand, these other distributions beg to be explored.
 
 \subsection{Alternative time-domain covariance functions}
 \label{sub:alternative_time_domain_covariance_functions}
