@@ -1,5 +1,6 @@
 \documentclass[12pt,letterpaper]{article}
 \usepackage{amsmath}
+\usepackage{natbib}
 \begin{document}
 \title{Visualizing uncertain curves and surfaces via Gaussian Oscillators}
 \author{Charles~R.~Hogg~III}
@@ -49,7 +50,7 @@ The solution is to show the draws one at a time.
 
 The present author is aware of two main approaches in the literature.
 
-Historically, most animations have been based on \textit{interpolation}\footnote{Get Skilling and ESG references; cite them here.}.
+Historically, most animations have been based on \textit{interpolation}\cite{skilling1992,esg1997}.
 A series of independent draws from the Gaussian are generated and displayed at regular time intervals; these are called the \textit{keyframes}.
 The frames at intervening times are weighted averages of the nearest two keyframes.
 The weighting favours the first keyframe at the beginning of the interval, and the second keyframe near the end, so that the curve or surface changes continuously from one keyframe to the next.
@@ -98,7 +99,7 @@ Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach cor
 
 ((Mention there are keyframes; they are bad.))
 
-An important advance was made by Hennig (cite), who generated circular paths with marginal normal distributions.
+An important advance was made by Hennig\cite{hennig-tr-is-8}, who generated circular paths with marginal normal distributions.
 A draw from the $m$-dimensional Gaussian formed one point on the circle.
 A second independent draw set the direction of traversal.
 
@@ -279,7 +280,7 @@ Figure \ref{fig:ks_distribution}(a) shows the results for \Sexpr{equivalent_draw
 It is clear that larger samples indeed have smaller KS statistics.
 
 The next three subfigures compare two types of Gaussian Oscillator\footnote{
-  We cannot include the Great Circles approach of (cite Hennig), since technically they are not Gaussian Oscillators.
+  We cannot include the Great Circles approach of \citep{hennig-tr-is-8}, since technically they are not Gaussian Oscillators.
   Individual dimensions are not independent; they are constrained so that the overall magnitude stays constant.
   However, each dimension is \textit{marginally} equivalent to the $N=2$ delocalized oscillators.
   Thus, the purple curve in Figure \ref{fig:ks_distribution}(b) can be taken to apply to Hennig's work, but the subsequent purple curves cannot (since Great Circles are restricted to $N=2$).
@@ -367,8 +368,8 @@ And the total probability mass of each mode can be indicated beside its animatio
 
 Discrete distributions present a greater challenge: obviously, they cannot be represented by continuous animations.
 However, even here there are special cases which admit partial success.
-Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\footnote{cite my paper?}).
-The Anscombe transform\footnote{citey cite} takes Poisson-distributed data into Gaussian-distributed to an excellent approximation.
+Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\cite{hklm2010}).
+The Anscombe transform\cite{anscombe1948} takes Poisson-distributed data into Gaussian-distributed to an excellent approximation.
 One could animate the transformed distribution with Gaussian Oscillators, ``un-transform'' the result, and round to the nearest integer.
 While the result would not be truly continuous, it would change in an ordered way which is easy for the eye to follow.
 
@@ -387,6 +388,8 @@ With the Gaussian case now well in hand, these other distributions beg to be exp
 \section{Conclusions}
 \label{sec:conclusions}
 
+\bibliographystyle{plain}
+\bibliography{biblio}
 \end{document}
 
 Ideas which need a home
