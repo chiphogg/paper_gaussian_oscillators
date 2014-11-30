@@ -3,6 +3,7 @@
 \usepackage{natbib}
 
 \DeclareMathOperator{\sinc}{sinc}
+\newcommand{\transpose}{\intercal}
 
 \begin{document}
 
@@ -552,6 +553,121 @@ With the Gaussian case now well in hand, these other distributions beg to be exp
   \item NIST
   \item B. McMichael (parametric models)
 \end{itemize}
+
+\section*{Appendix: Extending Gaussian Oscillators in time}
+\label{sec:appendix_extending_gaussian_oscillators_in_time}
+
+Suppose we have a Gaussian Oscillator timetrace, consisting of $n$ points.
+Can we extend the timetrace by computing the $(n + 1)$st?
+If so, what is the computational cost?
+
+This appendix will show that we \textit{can} extend Gaussian Oscillators, but the computational cost is unacceptably high.
+Most Gaussian Oscillators are $O(n^2)$ in both time and space.
+Oscillators with \textit{compact support} are the exception: they can be computed very efficiently ($O(1)$ with respect to $n$).
+This suggests that compact support oscillators represent the future of Gaussian animations.
+
+\subsection*{The general case}
+\label{sub:the_general_case}
+
+Let us treat the timetrace as a Gaussian process.
+This means we have generated $n$ i.i.d. standard normal variates, $\xi^{(n)} \equiv \left\{\xi_1, \cdots, \xi_n\right\}$, and the lower-Cholesky decomposition $L^{(n)}$ of the covariance matrix $K^{(n)}$.
+The first $n$ points are given by
+\begin{equation}
+  \alpha^{(n)} = L^{(n)} \xi^{(n)}.
+\end{equation}
+
+The covariance matrix $K^{(n + 1)}$ for the first $(n + 1)$ points can be written in block diagonal form:
+\begin{equation}
+  K^{(n + 1)} = \left[
+    \begin{array}{cc}
+      K^{(n)} & k^{(n)} \\
+      k^{(n)\transpose} & 1
+    \end{array}
+    \right],
+\end{equation}
+where $K^{(n)}$ is the covariance matrix for the first $n$ points, and $k^{(n)}$ is a vector giving the covariance of the new point with each old point.
+The Cholesky root can be similarly decomposed:
+\begin{equation}
+  L^{(n + 1)} = \left[
+    \begin{array}{cc}
+      L^{(n)} & 0 \\
+      \ell^{(n)\transpose} & \gamma
+    \end{array}
+    \right],
+\end{equation}
+where $L^{(n)}$ is the Cholesky root of $K^{(n)}$, $\ell^{(n)}$ is an unknown vector, and $\gamma$ is an unknown scalar.
+
+The $(n + 1)$st point is
+\begin{equation}
+  \alpha_{n + 1} = \left[
+    \begin{array}{cc}
+      \ell^{(n)\transpose} & \gamma
+    \end{array}
+  \right] \xi^{(n + 1)}.
+  \label{eqn:next_point}
+\end{equation}
+At this point, we drop the $(n)$ and $(n + 1)$ superscripts for convenience.
+The definition of the Cholesky root gives the following block matrix equation:
+\begin{equation}
+  \left[
+    \begin{array}{cc}
+      LL^\transpose & L\ell \\
+      \ell^\transpose L^\transpose & \ell^\transpose \ell + \gamma^2
+    \end{array}
+  \right] = \left[
+    \begin{array}{cc}
+      K & k \\
+      k^\transpose & 1
+    \end{array}
+  \right],
+\end{equation}
+which yields the vector equation
+\begin{equation}
+  L \ell = k
+  \label{eqn:go_cov_old_new}
+\end{equation}
+and the scalar equation
+\begin{equation}
+  \ell^\transpose \ell + \gamma^2 = 1
+\end{equation}
+Since $L$ is lower-triangular and $k$ is known, Equation \ref{eqn:go_cov_old_new} can be trivially solved for $\ell$, and we can compute the $(n + 1)$st point.
+
+However, the computational cost is catastrophic.
+Imagine we leave the animation running, so that $n$ continues to increase.
+The time to compute each new point by Equation \ref{eqn:go_cov_old_new} is $O(n^2)$.
+The storage also increases as $O(n^2)$, since we require the entire matrix $L^{(n)}$.
+This animation will consume all system resources at an ever-increasing pace, wihle delivering new points ever more slowly.
+
+\subsection*{Compact Support}
+\label{sub:compact_support}
+
+To prevent this disaster, suppose the covariance matrix has compact support, so that the new value is correlated only with the previous $m$.
+This means that $\left\{k_1, \cdots, k_{n - m} \right\}$ are all 0.
+Equation \ref{eqn:go_cov_old_new} implies that $\left\{\ell_1, \cdots, \ell_{n - m} \right\}$ are also 0.
+
+This yields enormous computational savings.
+Since $L$ is lower-triangular, only the final $m \times m$ submatrix actually contributes to the calculation of $\ell$ (by Equation \ref{eqn:go_cov_old_new}).
+Similarly, Equation \ref{eqn:next_point} only uses the $m$ most recent random variates, $\left\{\xi_{n - m + 1}, \cdots, \xi_n\right\}$; all the preceding ones can be discarded.
+The important point to notice is that our computational requirements no longer grow without limit as the animation continues to run.
+
+We can do still better.
+
+Imagine now that the time interval between successive points is constant.
+Then each row of $K$ (after the $m$th) is equivalent to the previous row, shifted by one column.
+The same will be true for $L$.
+Since each row has the same $m$ nonzero values, they need only be computed once.
+
+We also only need to store $m$ random values, since the $n$th value can replace the $(n - m)$th (which is no longer needed).
+The following R snippet\footnote{Note that this code is intended only to illustrate the concept; it is probably too inefficient for a real implementation.} illustrates how to generate an \texttt{n}-step timetrace, given a precomputed vector \texttt{ell} of length \texttt{m}:
+<<compact_support_timetrace, echo=TRUE, eval=FALSE>>=
+xi <- rnorm(m)
+alpha <- c()
+for (i in 1:n) {
+  alpha <- c(alpha, xi %*% ell)
+  xi <- c(tail(xi, -1), rnorm(1))
+}
+@
+The code inside the \texttt{for}-loop can be repeated arbitrarily many times to extend the length of the Gaussisan Oscillator.
 
 \bibliographystyle{plain}
 \bibliography{biblio}
