@@ -669,6 +669,10 @@ for (i in 1:n) {
 @
 The code inside the \texttt{for}-loop can be repeated arbitrarily many times to extend the length of the Gaussisan Oscillator.
 
+To summarize: extending an $n$-point Gaussian Oscillator timetrace is generally $O(n^2)$ in both time and space, which is unacceptable.
+But if the Gaussian Oscillator has compact support, both costs drop to $O(m^2)$ (where $m$ is small and constant).
+And if we furthermore evaluate that oscillator only at constant intervals, the costs drop further to $O(m)$.
+
 \bibliographystyle{plain}
 \bibliography{biblio}
 \end{document}
