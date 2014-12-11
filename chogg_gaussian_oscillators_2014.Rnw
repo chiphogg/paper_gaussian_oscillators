@@ -508,20 +508,21 @@ colour.legend <- theme(legend.justification=c(1, 1),
                        legend.position=c(1, 1),
                        legend.margin=unit(0, 'mm'),
                        legend.title=element_blank())
-grid.arrange(ncol=2,
-             KsFigure(which(ks.all$type == 'Independent Draws'))
-                 + geom_text(inherit.aes=FALSE, hjust=0, data=independent.peaks,
-                             aes(label=draws, x=ks, y=density))
-                 + ggtitle('(a) Independent draws'),
-             KsFigure(which(ks.all$num.draws == 2))
-                 + colour.legend
-                 + ggtitle(sprintf('(b) %d draws', equivalent_draws[1])),
-             KsFigure(which(ks.all$num.draws == 10))
-                 + colour.legend
-                 + ggtitle(sprintf('(c) %d draws', equivalent_draws[2])),
-             KsFigure(which(ks.all$num.draws == 50))
-                 + colour.legend
-                 + ggtitle(sprintf('(d) %d draws', equivalent_draws[3])))
+suppressWarnings(grid.arrange(
+    ncol=2,
+    KsFigure(which(ks.all$type == 'Independent Draws'))
+       + geom_text(inherit.aes=FALSE, hjust=0, data=independent.peaks,
+                   aes(label=draws, x=ks, y=density))
+       + ggtitle('(a) Independent draws'),
+    KsFigure(which(ks.all$num.draws == 2))
+       + colour.legend
+       + ggtitle(sprintf('(b) %d draws', equivalent_draws[1])),
+    KsFigure(which(ks.all$num.draws == 10))
+       + colour.legend
+       + ggtitle(sprintf('(c) %d draws', equivalent_draws[2])),
+    KsFigure(which(ks.all$num.draws == 50))
+       + colour.legend
+       + ggtitle(sprintf('(d) %d draws', equivalent_draws[3]))))
 @
 
 The distributions in Figure \ref{fig:ks_distribution}(b) have several interesting features.
