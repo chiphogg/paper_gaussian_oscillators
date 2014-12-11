@@ -229,9 +229,74 @@ Note too that $\langle f(t)^2 \rangle = 1$, as required for Gaussian Oscillators
 \subsection{Basis functions}
 \label{sub:basis_functions}
 
+<<common_prep, include=FALSE>>=
+# Parameters to govern the output for the basis and kinematics plots.
+N.out <- 400
+N.frames <- 4
+N.draws <- 20
+t.out <- seq(from=0, to=N.frames, length=N.out)
+
+weight <- function(t.in, t.out, FUN) {
+  ifelse(abs(t.in - t.out) > 1, 0, FUN(t.in, t.out))
+}
+periodic_weight <- function(t.in, t.out, period, FUN) {
+  # Hack to make the basis functions periodic (instead of always 0 at t=0).
+  pmax(weight(t.in, t.out, FUN), weight(t.in, t.out - period, FUN))
+}
+
+DelocalizedMatrix <- function(N.frames, t) {
+  N <- N.frames / 2
+  cbind(
+    outer(t, 1:N, function(t, i) sin(pi * i * t / N)),
+    outer(t, N:1, function(t, i) cos(pi * i * t / N))) / sqrt(N)
+}
+InterpolationMatrixESG <- function(N.frames, t.out) {
+  t.frames <- 1:N.frames
+  outer(t.out, t.frames, 
+    function(x, y) {
+      periodic_weight(x, y, N.frames, function(a, b) cos((a - b) * pi / 2))
+    })
+}
+
+# Matrices.
+interp.esg <- InterpolationMatrixESG(N.frames, t.out)
+interp.deloc <- DelocalizedMatrix(N.frames, t.out)
+@
+
 Both interpolation and delocalized oscillators can be viewed as a linear combination of basis functions with random coefficients.
 Comparing the basis functions for each method reveals the key differences between them.
 Figure (put a figure here) shows these basis functions.
+
+<<basis_prep, include=FALSE>>=
+basis.colors <- scale_colour_brewer(palette='Set2')
+basis.theme <- theme(legend.position='none')
+basis.plot <- function(mat, title) {
+  d <- data.frame(y=as.vector(mat), t=t.out,
+    label=rep(paste0('a', 1:N.frames), each=N.out))
+  p <- (ggplot(data=d, aes(x=t, y=y, colour=label))
+    + geom_hline(yintercept=0)
+    + geom_line(size=1)
+    + scale_x_continuous('', limits=c(0, N.frames))
+    + scale_y_continuous('', limits=c(-1, 1), breaks=(-1):1)
+    + basis.colors
+    + basis.theme
+    + ggtitle(title)
+    + theme(axis.text.x=element_blank())
+    )
+  return (p)
+}
+basis.caption <- sprintf(
+  paste(
+    'Basis functions for two types of Gaussian Oscillators (with %d independent draws).'),
+  N.frames
+  )
+@
+
+<<basis, echo=FALSE, fig.cap=basis.caption, fig.height=4>>=
+grid.arrange(ncol=1,
+  basis.plot(interp.esg, 'a) Trigonometric basis functions'),
+  basis.plot(interp.deloc, 'b) Delocalized basis functions'))
+@
 
 (Discuss them.)
 
@@ -242,59 +307,75 @@ One way to compare Gaussian Oscillators is to compute their most basic kinematic
 These distributions capture information which eludes the marginal \textit{position} distribution (which is the same by definition for all Gaussian Oscillators).
 
 <<kinematics_prep, include=FALSE>>=
-#approximate_derivative <- function(mat, t, deriv=0) {
-#  # Take the derivative with respect to the rows.
-#  if (deriv == 0) {
-#    return (mat)
-#  }
-#  mat.aug <- rbind(mat, mat[1, ])
-#  t.aug <- c(t, t[1])
-#  approximate_derivative(diff(mat.aug) / diff(t.aug), t, deriv - 1)
-#}
-#graph <- function(label, interp.mat, deriv=0, scale=1, N.draws=60, seed=2,
-#                  show_keyframes=FALSE) {
-#  set.seed(seed)
-#  mat <- approximate_derivative(interp.mat, t=t.out, deriv=deriv)
-#  random.data <- matrix(rnorm(n=ncol(mat) * N.draws), ncol=N.draws)
-#  timetraces <- data.frame(y=as.vector(mat %*% random.data),
-#                           group=rep(1:N.draws, each=nrow(mat)),
-#                           t=t.out)
-#  first_timetrace <- timetraces[1:nrow(mat), ]
-#  p <- (ggplot(data=timetraces, aes(x=t, y=y, group=group))
-#        + geom_line(colour='#999999')
-#        + geom_line(data=first_timetrace)
-#        + scale_y_continuous("", breaks=scale * (-3):3)
-#        + scale_x_continuous("")
-#        + coord_cartesian(ylim=3 * ((pi / 2) ^ (2 * deriv)) * c(-1, 1))
-#        + theme(axis.text.x=element_blank())
-#        + theme(plot.margin=unit(rep(0.1, 4), "cm"))
-#        )
-#  if (show_keyframes) {
-#    p <- p + geom_point(data=data.frame(t=0:nrow(random.data),
-#                                        y=c(tail(random.data[, 1], 1),
-#                                            random.data[, 1])),
-#                        aes(x=t, y=y), inherit.aes=FALSE)
-#  }
-#  return (p)
-#}
-#graphs <- function(label, mat) {
-#  interpolating <- length(grep('Interpolation', label)) > 0
-#  list(graph(label, mat, deriv=0, scale=2, show_keyframes=interpolating),
-#       graph(label, mat, deriv=1, scale=5),
-#       graph(label, mat, deriv=2, scale=10))
-#}
-#graphs.lin <- graphs(label="Linear Interpolation", mat=interp.linear)
-#graphs.esg <- graphs(label="ESG Interpolation", mat=interp.esg)
-#graphs.smooth <- graphs(label="Smooth Timetraces", mat=interp.smooth)
-#quickie.text <- function(x) textGrob(x, just='center', gp=gpar(fontsize=25))
-#grid.arrange(quickie.text('Position'),
-#             quickie.text('Velocity'),
-#             quickie.text('Acceleration'),
-#             graphs.lin[[1]], graphs.lin[[2]], graphs.lin[[3]], 
-#             graphs.esg[[1]], graphs.esg[[2]], graphs.esg[[3]], 
-#             graphs.smooth[[1]], graphs.smooth[[2]], graphs.smooth[[3]],
-#             ncol=3,
-#             heights=c(0.2, 1, 1, 1))
+approximate_derivative <- function(mat, t, deriv=0) {
+  # Take the derivative with respect to the rows.
+  if (deriv == 0) {
+    return (mat)
+  }
+  mat.aug <- rbind(mat, mat[1, ])
+  t.aug <- c(t, t[1])
+  approximate_derivative(diff(mat.aug) / diff(t.aug), t, deriv - 1)
+}
+
+graph <- function(label, interp.mat, deriv=0, scale=1, N.draws=3, seed=2,
+                  show_keyframes=FALSE) {
+  set.seed(seed)
+  mat <- approximate_derivative(interp.mat, t=t.out, deriv=deriv)
+  random.data <- matrix(rnorm(n=ncol(mat) * N.draws), ncol=N.draws)
+  timetraces <- data.frame(y=as.vector(mat %*% random.data),
+                           group=rep(1:N.draws, each=nrow(mat)),
+                           t=t.out)
+  first_timetrace <- timetraces[1:nrow(mat), ]
+  p <- (ggplot(data=timetraces, aes(x=t, y=y, group=group))
+        + geom_line(colour='#999999')
+        + geom_line(data=first_timetrace)
+        + scale_y_continuous("", breaks=scale * (-3):3)
+        + scale_x_continuous("")
+        + coord_cartesian(ylim=3 * ((pi / 2) ^ (2 * deriv)) * c(-1, 1))
+        + theme(axis.text.x=element_blank())
+        + theme(plot.margin=unit(rep(0.1, 4), "cm"))
+        )
+  if (show_keyframes) {
+    p <- p + geom_point(data=data.frame(t=0:nrow(random.data),
+                                        y=c(tail(random.data[, 1], 1),
+                                            random.data[, 1])),
+                        aes(x=t, y=y), inherit.aes=FALSE)
+  }
+  return (p)
+}
+
+graphs <- function(label, mat, n) {
+  interpolating <- length(grep('Interpolation', label)) > 0
+  list(graph(label, mat, N.draws=n, deriv=0, scale=2, show_keyframes=interpolating),
+       graph(label, mat, N.draws=n, deriv=1, scale=5),
+       graph(label, mat, N.draws=n, deriv=2, scale=10))
+}
+
+# Construct the graphs.
+graphs.esg <- graphs(label="ESG Interpolation", mat=interp.esg, n=N.draws)
+graphs.deloc <- graphs(label="Smooth Timetraces", mat=interp.deloc, n=N.draws)
+quickie.text <- function(x, ...) textGrob(x, just='center', gp=gpar(fontsize=15), ...)
+kinematics.caption <- sprintf(
+  paste(
+    'The basic kinematics of two types of Gaussian Oscillators:',
+    'the standard trigonometric oscillators, and the ``delocalized oscillators\'\' this paper introduces.',
+    'Both populations are illustrated with %d draws (grey), one of which is randomly chosen and highlighted for illustration.',
+    'The velocity and acceleration graphs for the Trigonometric oscillators clearly show that keyframes are treated specially.',
+    'By contrast, all times for the Delocalized oscillators are statistically equivalent.'),
+  N.draws
+  )
+@
+
+<<kinematics, cache=FALSE, echo=FALSE, fig.cap=kinematics.caption, fig.height=4>>=
+grid.arrange(nullGrob(),
+             quickie.text('Position'),
+             quickie.text('Velocity'),
+             quickie.text('Acceleration'),
+             quickie.text('Trigonometric', rot=90), graphs.esg[[1]], graphs.esg[[2]], graphs.esg[[3]], 
+             quickie.text('Delocalized\n(this paper)', rot=90), graphs.deloc[[1]], graphs.deloc[[2]], graphs.deloc[[3]],
+             ncol=4,
+             heights=c(0.2, 1, 1, 1),
+             widths=c(0.23, 1, 1, 1))
 @
 Figure ((make-a-figure!!)) shows the results.
 The velocity distribution for interpolation changes discontinuously at every keyframe.
