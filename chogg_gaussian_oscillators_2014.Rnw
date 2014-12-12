@@ -19,6 +19,9 @@ require(gridExtra)
 
 source('interpolation.R')
 
+# "Draft mode" makes sketch-y figures with low statistics.
+draft_mode <- TRUE
+
 # Smart caching.
 opts_chunk$set(cache=TRUE, autodep=TRUE)
 
@@ -68,7 +71,7 @@ Figure \ref{fig:interpolation}(a) illustrates the idea for a simple 1-dimensiona
 
 <<interpolation_plots, include=FALSE>>=
 quantiles <- c(0.1, 0.5, 0.9)
-num.interpolated.curves <- 5e2  # Make it bigger later
+num.interpolated.curves <- ifelse(draft_mode, 1e3, 1e6)
 num.points <- 500
 num.keyframes <- 4
 interpolation.caption <- sprintf(
@@ -398,7 +401,7 @@ But the marginal distribution for a \textit{single} oscillator is a point mass, 
 <<ks_data, include=FALSE>>=
 # The number of Gaussian Oscillators of each type to construct.  Increasing
 # this number gives more reliable density estimation.
-num_oscillators <- 10000
+num_oscillators <- ifelse(draft_mode, 0.5e3, 1e6)
 
 # The number of equivalent independent normal draws to test.
 equivalent_draws <- c(2, 10, 50)
