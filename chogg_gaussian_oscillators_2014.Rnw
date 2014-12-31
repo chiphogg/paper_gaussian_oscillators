@@ -4,6 +4,8 @@
 
 \DeclareMathOperator{\sinc}{sinc}
 \newcommand{\transpose}{\intercal}
+\newcommand{\iid}{i.i.d.}
+\newcommand{\order}{\mathcal{O}}
 
 \begin{document}
 
@@ -72,7 +74,7 @@ The eye is naturally drawn to areas with more motion, which represent higher unc
 Continuous animations are thus an intuitive and interpretable way to visualize uncertainty in curves.
 
 Naturally, all these considerations apply to uncertain \textit{surfaces} too, but even more strongly.
-Credible intervals for surfacesare difficult to visualize because the surfaces obscure one another.
+Credible intervals for surfaces are difficult to visualize because the surfaces obscure one another.
 Animations are much better, because they never show more than one surface at a time.
 
 This paper focuses on curves and surfaces whose underlying distribution is Gaussian.
@@ -154,7 +156,7 @@ This section will define and explain the \textit{Gaussian Oscillator}: the key c
 
 First, consider an $m$-dimensional Gaussian, with mean vector $\mu$ and covariance matrix $K$.
 To draw a sample from this distribution, we need the lower-triangular Cholesky decomposition $L$ of $K$, which satisfies $LL^\intercal = K$.
-If $\xi = \left( \xi_1, \cdots, \xi_m \right)^\intercal$ represents $m$ i.i.d. draws from the \textit{standard} normal $N(0, 1)$, then $\alpha \equiv \mu + L\xi$ is a draw from $N(\mu, K)$.
+If $\xi = \left( \xi_1, \cdots, \xi_m \right)^\intercal$ represents $m$ \iid~draws from the \textit{standard} normal $N(0, 1)$, then $\alpha \equiv \mu + L\xi$ is a draw from $N(\mu, K)$.
 
 Now imagine that each $\xi_i$ is a random function of time, $\xi_i(t)$, such that $\xi_i(t) \sim N(0, 1) \,\, \forall t$.
 It follows that $\alpha(t) \sim N(\mu, K) \,\, \forall t$.
@@ -196,14 +198,14 @@ Treating Gaussian Oscillators as Gaussian Processes is likely to be more useful 
   Gaussian Processes with compact support --- discussed in the appendix --- are a notable exception.
 }.
 Consider a trigonometric interpolation of $k$ keyframes and $n$ total frames; typically, $n \gg k$.
-Computing $\xi(t)$ as a Gaussian Process requires $n$ i.i.d. normal draws, and an $\mathcal{O}(n^3)$ matrix inversion!
+Computing $\xi(t)$ as a Gaussian Process requires $n$ \iid~normal draws, and an $\order(n^3)$ matrix inversion!
 By contrast, explicit interpolation requires only $k$ normal draws (and simple sines and cosines instead of the matrix inversion).
 
 \section{A New Way to Generate Animations}
 \label{sec:a_new_way_to_generate_animations}
 
 The new animations in this paper are most naturally compared to the interpolation technique.
-Both techniques involve generating some number $N$ of i.i.d. standard normal variates, then using them deterministically to produce a continuous timetrace.
+Both techniques involve generating some number $N$ of \iid~standard normal variates, then using them deterministically to produce a continuous timetrace.
 Figure \ref{fig:basis} visualizes each technique in terms of basis functions.
 With interpolation, each variate influences only the local region between its nearest neighbours.
 In this paper's technique, each variate's influence is spread out across the entire timetrace.
@@ -255,20 +257,20 @@ basis.plot <- function(mat, title) {
   p <- (ggplot(data=d, aes(x=t, y=y, colour=label))
     + geom_hline(yintercept=0)
     + geom_line(size=1)
-    + scale_x_continuous('', limits=c(0, N.frames))
-    + scale_y_continuous('', limits=c(-1, 1), breaks=(-1):1)
+    + scale_x_continuous('Time', limits=c(0, N.frames))
+    + scale_y_continuous('Value', limits=c(-1, 1), breaks=(-1):1)
     + basis.colors
     + basis.theme
     + ggtitle(title)
-    + theme(axis.text.x=element_blank())
     )
   return (p)
 }
 basis.caption <- sprintf(
   paste(
-    'Basis functions for two types of Gaussian Oscillators (each based on %d independent draws).',
+    'Basis functions for two types of Gaussian Oscillators (each based on %d independent draws, and periodic with period %d).',
     'a) Trigonometric interpolation basis functions localize the influence of each sample, with discontinuous slope at the boundaries.',
     'b) Delocalized oscillator basis functions spread the influence of each sample across the entire timetrace, and are perfectly smooth everywhere.'),
+  N.frames,
   N.frames
   )
 @
@@ -279,7 +281,7 @@ grid.arrange(ncol=1,
   basis.plot(interp.deloc, 'b) Delocalized basis functions'))
 @
 
-Explicitly, given $N$ i.i.d. normal variates $\{\epsilon_1, \cdots, \epsilon_n\}$, the corresponding \textit{delocalized oscillator} $\xi(t)$ is given by
+Explicitly, given $N$ \iid~normal variates $\{\epsilon_1, \cdots, \epsilon_n\}$, the corresponding \textit{delocalized oscillator} $\xi(t)$ is given by
 \begin{equation}
   \label{eqn:delocalized}
   \xi(t) = \sqrt{\frac{2}{N}} \sum\limits_{i=1}^{N/2} \left[
@@ -725,7 +727,7 @@ And the total probability mass of each mode can be indicated beside its animatio
 Discrete distributions present a greater challenge: obviously, they cannot be represented by continuous animations.
 However, even here there are special cases which admit partial success.
 Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\cite{hklm2010}).
-The Anscombe transform\cite{anscombe1948} takes Poisson-distributed data into Gaussian-distributed to an excellent approximation.
+If we perform an Anscombe transform\cite{anscombe1948}, the transformed data follows the Gaussian distribution to an excellent approximation.
 One could animate the transformed distribution with Gaussian Oscillators, ``un-transform'' the result, and round to the nearest integer.
 While the result would not be truly continuous, it would change in an ordered way which is easy for the eye to follow.
 
@@ -774,7 +776,7 @@ The \texttt{R} programming language\cite{rlang} already supports packages which 
 Such a package could be augmented to include javascript which continually updates the points' coordinates, based on newly generated random variables.
 
 This, then, is the bright future we envision for animated uncertainty visualization.
-The uncertainty can be analyzed in \texttt{R}, as usual --- but rather than a static image or animated gif, the output is an interactive web app.
+The uncertainty can be analyzed in \texttt{R}, as usual --- but rather than a static image or animated \texttt{.gif}, the output is an interactive web app.
 The curve continuously moves in a smooth and natural way, never repeating its position, visualizing more and more of the distribution which the analysis produced.
 
 \section{Conclusions}
@@ -793,6 +795,8 @@ First, I am thankful to the National Institute of Standards and Technology, wher
 Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian Processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
+I am also thankful to Melissa Delucci, who provided valuable feedback on a draft of this paper.
+
 \section*{Appendix: Extending Gaussian Oscillators in time}
 \label{sec:appendix_extending_gaussian_oscillators_in_time}
 
@@ -801,15 +805,15 @@ Can we extend the timetrace by computing the $(n + 1)$st?
 If so, what is the computational cost?
 
 This appendix will show that we \textit{can} extend Gaussian Oscillators, but the computational cost is unacceptably high.
-Most Gaussian Oscillators are $O(n^2)$ in both time and space.
-Oscillators with \textit{compact support} are the exception: they can be computed very efficiently ($O(1)$ with respect to $n$).
+Most Gaussian Oscillators are $\order(n^2)$ in both time and space.
+Oscillators with \textit{compact support} are the exception: they can be computed very efficiently ($\order(1)$ with respect to $n$).
 This suggests that compact support oscillators represent the future of online Gaussian animations.
 
 \subsection*{The general case}
 \label{sub:the_general_case}
 
 Let us treat the timetrace as a Gaussian process.
-This means we have generated $n$ i.i.d. standard normal variates, $\xi^{(n)} \equiv \left\{\xi_1, \cdots, \xi_n\right\}$, and the lower-Cholesky decomposition $L^{(n)}$ of the covariance matrix $K^{(n)}$.
+This means we have generated $n$ \iid~standard normal variates, $\xi^{(n)} \equiv \left\{\xi_1, \cdots, \xi_n\right\}$, and the lower-Cholesky decomposition $L^{(n)}$ of the covariance matrix $K^{(n)}$.
 The first $n$ points are given by
 \begin{equation}
   \alpha^{(n)} = L^{(n)} \xi^{(n)}.
@@ -873,8 +877,8 @@ Since $L$ is lower-triangular and $k$ is known, Equation \ref{eqn:go_cov_old_new
 
 However, the computational cost is catastrophic.
 Imagine we leave the animation running, so that $n$ continues to increase.
-The time to compute each new point by Equation \ref{eqn:go_cov_old_new} is $O(n^2)$.
-The storage also increases as $O(n^2)$, since we require the entire matrix $L^{(n)}$.
+The time to compute each new point by Equation \ref{eqn:go_cov_old_new} is $\order(n^2)$.
+The storage also increases as $\order(n^2)$, since we require the entire matrix $L^{(n)}$.
 This animation will consume all system resources at an ever-increasing pace, while delivering new points ever more slowly.
 
 \subsection*{Compact Support}
@@ -907,9 +911,9 @@ while (TRUE) {
 }
 @
 
-To summarize: extending an $n$-point Gaussian Oscillator timetrace is generally $O(n^2)$ in both time and space, which is unacceptable.
-But if the Gaussian Oscillator has compact support, both costs drop to $O(m^2)$ (where $m$ is small and constant).
-And if we furthermore evaluate that oscillator only at constant time intervals, all costs drop further to $O(m)$.
+To summarize: extending an $n$-point Gaussian Oscillator timetrace is generally $\order(n^2)$ in both time and space, which is unacceptable.
+But if the Gaussian Oscillator has compact support, both costs drop to $\order(m^2)$ (where $m$ is small and constant).
+And if we furthermore evaluate that oscillator only at constant time intervals, all costs drop further to $\order(m)$.
 
 \bibliographystyle{plain}
 \bibliography{biblio}
