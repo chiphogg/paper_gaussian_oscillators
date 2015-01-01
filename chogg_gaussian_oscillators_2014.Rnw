@@ -795,7 +795,7 @@ First, I am thankful to the National Institute of Standards and Technology, wher
 Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian Processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
-I am also thankful to Melissa Delucci, who provided valuable feedback on a draft of this paper.
+I am also thankful to Melissa DeLucchi, who provided valuable feedback on a draft of this paper.
 
 \section*{Appendix: Extending Gaussian Oscillators in time}
 \label{sec:appendix_extending_gaussian_oscillators_in_time}
