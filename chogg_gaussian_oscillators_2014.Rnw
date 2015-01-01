@@ -45,10 +45,11 @@ LegendOnly <- function(a.gplot) {
 
 \begin{abstract}
   We explore using animations to visualize uncertainty in curves and surfaces.
-  First, we introduce a new concept, the \textit{Gaussian Oscillator}, to encompass existing techniques and help develop new ones.
-  We develop and apply new quality metrics for Gaussian Oscillators.
-  We then introduce a new approach, the \textit{delocalized oscillator}, which combines the best traits of existing techniques: these animations feature smooth, natural motion, and also represent the underlying distribution more faithfully and fully.
-  Finally, we point out that Gaussian animations are themselves simply Gaussian Processes, and suggest how this insight could yield even better animations in the future.
+  First, we define the \textit{Gaussian oscillator}, a unifying concept which encompasses existing techniques (and helps develop new ones).
+  We propose criteria to judge the quality of different animation techniques.
+  These include the Kolmogorov-Smirnov \textit{distribution}: the first quantitative metric to measure how faithfully an animation represents its underlying distribution.
+  This paper also introduces a new animation technique, the \textit{delocalized oscillator}, which combines the best traits of existing techniques: these animations feature fluid, natural motion, and also represent the underlying distribution more faithfully and fully.
+  Finally, we provide a roadmap to develop even better animations in the future, by leveraging a key insight: that Gaussian animations are nothing more than a special type of Gaussian processes.
 \end{abstract}
 
 \section{Introduction}
@@ -75,11 +76,11 @@ Continuous animations are thus an intuitive and interpretable way to visualize u
 
 Naturally, all these considerations apply to uncertain \textit{surfaces} too, but even more strongly.
 Credible intervals for surfaces are difficult to visualize because the surfaces obscure one another.
-Animations are much better, because they never show more than one surface at a time.
+Animations avoid this difficulty, because they never show more than one surface at a time.
 
 This paper focuses on curves and surfaces whose underlying distribution is Gaussian.
 This is not nearly as restrictive as it might seem.
-It includes Gaussian Processes\cite{3569}, a flexible nonparametric class of models.
+It includes Gaussian processes\cite{3569}, a flexible nonparametric class of models.
 Furthermore, parametric models often have a single posterior mode, which is Gaussian to leading order.
 Continuous paths through the Gaussian parameter space correspond to continuous animations of the function those parameters govern.
 
@@ -99,7 +100,10 @@ num.keyframes <- 4
 interpolation.caption <- sprintf(
     paste("Interpolation illustrated for a standard 1-D Gaussian.",
           "(a) A single set of normal draws interpolated by three methods.",
-          "(b) Pointwise quantiles for interpolating %s random draws."),
+          "It is not obvious from this figure which of these methods, if any, is best.",
+          "(b) Pointwise quantiles for interpolating %s random draws.",
+          "These show that linear and spline interpolation are unacceptable, because the population statistics are different between the keyframes.",
+          "Only trigonometric interpolation yields the same marginal distribution at all times."),
     formatC(num.interpolated.curves, big.mark=',', format='fg'))
 
 interp.matrix.functions <- list(Linear=InterpLinear,
@@ -132,38 +136,38 @@ Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach\cit
 
 An important alternative was pioneered by Hennig\cite{hennig-tr-is-8}, who generated marginally normal great-circle orbits through parameter space.
 The starting point is a random draw from the multivariate Gaussian.
-The motion begins in the direction of a second random draw, constrained to a constant distance from the origin.
+Motion begins in the direction of a second random draw, and is constrained so that the particle's distance from the origin is constant.
 Since no point on a circle is special, every frame in these circular timetraces is fully equivalent to every other.
 To the best of this author's knowledge, Hennig's paper is the first published example of a smooth, keyframe-free Gaussian animation.
 
 Each approach has advantages and weaknesses.
 Interpolation is flexible: it can incorporate arbitrarily many independent draws, yielding paths which better represent the Normal distribution.
-The downside is that not all frames are equivalent: keyframes have preferred status, and the motion changes discontinuously there.
+The downside is that not all frames are equivalent: keyframes have preferred status, and the motion changes discontinuously there, which is distracting.
 
-Great Circle animations\cite{hennig-tr-is-8} do not have this defect; they treat all frames equally in every way.
-They also represent the normal distribution more faithfully than interpolated animations for the same number of samples.
-Their shortcoming is that they cannot incorporate more than two, and therefore cannot improve their fidelity.
+Great circle animations\cite{hennig-tr-is-8} do not have this defect; they treat all frames equally in every way.
+They also represent the normal distribution more faithfully than interpolated animations for the same number of samples, as Section \ref{sub:statistical_properties} elaborates.
+Their shortcoming is that they cannot incorporate more than two samples, and therefore cannot further improve their fidelity.
 
 This paper proposes a unifying concept which encompasses these and future approaches: the \textit{Gaussian oscillator}.
 We then introduce a novel Gaussian oscillator technique, which combines the extensibility of interpolation with the smooth, natural motion of the great circles.
 We develop quality metrics to assess the strengths and weaknesses of each method.
 Finally, we suggest how to leverage the Gaussian oscillator framework to construct even better animations in the future.
 
-\section{Gaussian Oscillators}
+\section{Gaussian oscillators}
 \label{sec:gaussian_oscillators}
 
-This section will define and explain the \textit{Gaussian Oscillator}: the key concept for analyzing Gaussian animations.
+This section will define and explain the \textit{Gaussian oscillator}: the key concept for analyzing Gaussian animations.
 
 First, consider an $m$-dimensional Gaussian, with mean vector $\mu$ and covariance matrix $K$.
 To draw a sample from this distribution, we need the lower-triangular Cholesky decomposition $L$ of $K$, which satisfies $LL^\intercal = K$.
-If $\xi = \left( \xi_1, \cdots, \xi_m \right)^\intercal$ represents $m$ \iid~draws from the \textit{standard} normal $N(0, 1)$, then $\alpha \equiv \mu + L\xi$ is a draw from $N(\mu, K)$.
+If $\xi \equiv \left( \xi_1, \cdots, \xi_m \right)^\intercal$ represents $m$ \iid~draws from the \textit{standard} normal $N(0, 1)$, then $\alpha \equiv \mu + L\xi$ is a draw from $N(\mu, K)$.
 
-Now imagine that each $\xi_i$ is a random function of time, $\xi_i(t)$, such that $\xi_i(t) \sim N(0, 1) \,\, \forall t$.
-It follows that $\alpha(t) \sim N(\mu, K) \,\, \forall t$.
+Now imagine that each $\xi_i$ is a random function of time, $\xi_i(t)$, such that $\xi_i(t) \sim N(0, 1) \,\, \forall t$ (marginally).
+It follows that $\alpha(t) \sim N(\mu, K) \,\, \forall t$ (again, marginally).
 Thus, the problem of animating arbitrary multidimensional Gaussian distributions reduces to that of animating a single-dimensional standard Gaussian.
 This latter problem is the focus of the rest of the paper.
 
-This motivates us to define a \textit{Gaussian Oscillator} as a stochastic process, $\xi(t)$, with the following properties.
+This motivates us to define a \textit{Gaussian oscillator} as a stochastic process, $\xi(t)$, with the following properties.
 \begin{equation}
   \xi(t) \sim N(0, 1) \,\, \forall t
   \label{eqn:go_marginal}
@@ -172,41 +176,60 @@ This motivates us to define a \textit{Gaussian Oscillator} as a stochastic proce
   \lim_{\Delta t \rightarrow 0} \langle \xi(t) \xi(t + \Delta t) \rangle = 1 \,\, \forall t
   \label{eqn:go_continuous}
 \end{equation}
-Equation \ref{eqn:go_marginal} means that every frame of the animations is marginally Gaussian.
+Equation \ref{eqn:go_marginal} means that every frame of the animation is marginally Gaussian.
 Equation \ref{eqn:go_continuous} means that the animation is \textit{continuous}.
 
 Most $m$-dimensional Gaussian animations can be analyzed by combining $m$ independent Gaussian oscillators.
-Great Circle animations are an exception, since they sample directly from the $m$-dimensional distribution.
-Each individual dimension of a Great Circle animation fulfills the definition of a Gaussian Oscillator.
-However, the oscillators are not independent (for example, the $m$-dimensional vector is constrained to have constant magnitude).
+Great circle animations are an exception, since they sample directly from the $m$-dimensional distribution.
+Each individual dimension of a great circle animation fulfills the definition of a Gaussian oscillator.
+However, the oscillators are not independent, since the $m$-dimensional vector is constrained to have constant magnitude.
 
-\subsection{Connection with Gaussian Processes}
+\subsection{Connection with Gaussian processes}
 \label{sub:connection_with_gaussian_processes}
 
-Readers familiar with the concept will have noticed that Gaussian Oscillators are also Gaussian \textit{Processes}\cite{3569}, with a few constraints.
+Readers familiar with the concept may have noticed that Gaussian oscillators are also Gaussian \textit{processes}\cite{3569}, with a few constraints.
 Specifically, the mean function $\mu(t)$ is zero everywhere, and the covariance function $k(t, t')$ is 1 when $t = t'$ (and continuous in that neighbourhood).
 
 Remarkably, nobody seems to have pointed out this connection before.
 It is extremely useful, since future Gaussian animation research can leverage the well-studied menagerie of covariance functions\cite{3569}.
 
-There is some danger of confusion here, because often the curves and surfaces being animated are also modeled using Gaussian Processes.
-The difference is that the Gaussian Oscillator is a \textit{time-}domain Gaussian Process, while the curve or surface lives in the \textit{space} domain\footnote{
-The ``space'' here might be an abstract space.  It might even be (physical) time --- for example, with time-series analysis.  However, the point is that this is distinct from the ``animation time'' domain where the Gaussian Oscillator lives.
+There is some danger of confusion here, because often the curves and surfaces being animated are also modeled using Gaussian processes.
+The difference is that the Gaussian oscillator is a \textit{time-}domain Gaussian process, while the curve or surface lives in the \textit{space} domain\footnote{
+The ``space'' here might be an abstract space.  It might even be (physical) time --- for example, with time-series analysis.  However, the point is that this is distinct from the ``animation time'' domain where the Gaussian oscillator lives.
 }.
 
-Treating Gaussian Oscillators as Gaussian Processes is likely to be more useful for theoretical analysis than for practical computations\footnote{
-  Gaussian Processes with compact support --- discussed in the appendix --- are a notable exception.
+Treating Gaussian oscillators as Gaussian processes is likely to be more useful for theoretical analysis than for practical computations\footnote{
+  Gaussian processes with compact support are a notable exception, as discussed in the appendix.
 }.
 Consider a trigonometric interpolation of $k$ keyframes and $n$ total frames; typically, $n \gg k$.
-Computing $\xi(t)$ as a Gaussian Process requires $n$ \iid~normal draws, and an $\order(n^3)$ matrix inversion!
+Computing $\xi(t)$ as a Gaussian process requires $n$ \iid~normal draws, and an $\order(n^3)$ matrix inversion!
 By contrast, explicit interpolation requires only $k$ normal draws (and simple sines and cosines instead of the matrix inversion).
+
+\subsection{Offline and online animations}
+\label{sub:offline_and_online_animations}
+
+It is useful to distinguish between ``offline'' and ``online'' animations.
+An ``offline'' animation is one which is fully constructed before it is viewed.
+The classic example is an animated \texttt{.gif}.
+For ``online'' animations, later frames are constructed while earlier frames are being viewed.
+A modern example would be any javascript plotting library which uses \texttt{CSS3} transitions.
+
+Note that the online/offline distinction has nothing to do with internet connectivity.
+For example, an animated \texttt{.gif} is the archetype of an ``offline'' animation, but it is usually shared over the internet.
+Moreover, ``online'' animations based on javascript and CSS do not require an internet connection, since the computation happens on the client side.
+
+Offline animations suffer from a fundamental tension.
+With too few frames, they represent their underlying distribution poorly (as Section \ref{sub:statistical_properties} will elaborate).
+With too many frames, the file size becomes impractically huge.
+For these reasons, online animations are better when available.
 
 \section{A New Way to Generate Animations}
 \label{sec:a_new_way_to_generate_animations}
 
-The new animations in this paper are most naturally compared to the interpolation technique.
-Both techniques involve generating some number $N$ of \iid~standard normal variates, then using them deterministically to produce a continuous timetrace.
-Figure \ref{fig:basis} visualizes each technique in terms of basis functions.
+We introduce our new animation technique by comparing it to interpolation.
+Both techniques involve generating some number $N$ of \iid~standard normal variates, then using them deterministically to produce a continuous timetrace.\footnote{
+  These random variates can be viewed as coefficients for a set of basis functions, as Figure \ref{fig:basis} shows.
+}
 With interpolation, each variate influences only the local region between its nearest neighbours.
 In this paper's technique, each variate's influence is spread out across the entire timetrace.
 
@@ -215,7 +238,8 @@ In this paper's technique, each variate's influence is spread out across the ent
 N.out <- 400
 N.frames <- 4
 N.draws <- 20
-t.out <- seq(from=0, to=N.frames, length=N.out)
+dt <- N.frames / N.out
+t.out <- seq(from=dt, to=N.frames, length=N.out)
 
 weight <- function(t.in, t.out, FUN) {
   ifelse(abs(t.in - t.out) > 1, 0, FUN(t.in, t.out))
@@ -244,10 +268,6 @@ interp.esg <- InterpolationMatrixESG(N.frames, t.out)
 interp.deloc <- DelocalizedMatrix(N.frames, t.out)
 @
 
-Both interpolation and delocalized oscillators can be viewed as a linear combination of basis functions with random coefficients.
-Comparing the basis functions for each method reveals the key differences between them.
-Figure \ref{fig:basis} shows these basis functions.
-
 <<basis_prep, include=FALSE>>=
 basis.colors <- scale_colour_brewer(palette='Set2')
 basis.theme <- theme(legend.position='none')
@@ -267,8 +287,8 @@ basis.plot <- function(mat, title) {
 }
 basis.caption <- sprintf(
   paste(
-    'Basis functions for two types of Gaussian Oscillators (each based on %d independent draws, and periodic with period %d).',
-    'a) Trigonometric interpolation basis functions localize the influence of each sample, with discontinuous slope at the boundaries.',
+    'Basis functions for two types of Gaussian oscillators (each based on %d independent draws, and periodic with period %d).',
+    'a) Trigonometric interpolation basis functions localize the influence of each sample, but the slope is discontinuous at the boundaries.',
     'b) Delocalized oscillator basis functions spread the influence of each sample across the entire timetrace, and are perfectly smooth everywhere.'),
   N.frames,
   N.frames
@@ -289,12 +309,11 @@ Explicitly, given $N$ \iid~normal variates $\{\epsilon_1, \cdots, \epsilon_n\}$,
   \epsilon_{2i} \cos \left( \frac{2 \pi i t}{N} \right)
 \right].
 \end{equation}
-$\xi(t)$ is periodic, with period $N$.
-This makes it useful for generating looping animated \texttt{.gif}s.
-Note that this is only defined for even $N$, since every $\sin(\cdot)$ needs a corresponding $\cos(\cdot)$.
+$\xi(t)$ is an offline, periodic technique, with period $N$.
+Note that $\xi(t)$ is only defined for even $N$, since every $\sin(\cdot)$ needs a corresponding $\cos(\cdot)$.
 Considering the application, this restriction seems mild.
 
-To verify that $\xi(t)$ is a Gaussian Oscillator, the relations $\langle \epsilon_i \rangle = 0$ and $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$ will be useful.
+To verify that $\xi(t)$ is a Gaussian oscillator, the relations $\langle \epsilon_i \rangle = 0$ and $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$ will be useful.
 First, note that $\xi(t)$ is a sum of Gaussian random variables at each time $t$; therefore, $\xi(t)$ also has a Gaussian distribution.
 This means that its mean $\langle \xi(t) \rangle$ and covariance $\langle \xi(t_1) \xi(t_2) \rangle$ characterize it completely.
 
@@ -311,26 +330,27 @@ It involves a double sum, but since $\langle \epsilon_i \epsilon_j \rangle = \de
     \left( \frac{2 \pi i (t_2 - t_1)}{N} \right).
     \label{eqn:do_covariance}
 \end{align}
-Note that this depends only on $(t_2 - t_1)$: these Gaussian Oscillators are \textit{stationary}, so no keyframes are singled out.
-Note too that $\langle \xi(t)^2 \rangle = 1 \,\,\,\, \forall t$, as required for Gaussian Oscillators.
+Note that this depends only on $(t_2 - t_1)$: these Gaussian oscillators are \textit{stationary}, so no keyframes are singled out.
+Note too that $\langle \xi(t)^2 \rangle = 1 \,\,\,\, \forall t$, as required for Gaussian oscillators.
 
 \section{Comparison}
 \label{sec:comparison}
 
-This section introduces metrics to judge the quality of each type of Gaussian Oscillator.
-These metrics assume that the animation is composed of independent Gaussian Oscillators, as is usually the case.
-Great Circle animations\cite{hennig-tr-is-8} violate this assumption, so we must begin by clarifying their role.
+This section introduces criteria to judge the quality of each type of Gaussian oscillator.
+This analysis assumes that the animation is composed of independent Gaussian oscillators, which is usually the case.
+Great circle animations\cite{hennig-tr-is-8} violate this assumption, so we must begin by clarifying their role.
 
-Great Circle animations are very similar to the $N = 2$ case of delocalized oscillators ($\text{DO}_2$ for short).
+Great circle animations are very similar to the $N = 2$ case of delocalized oscillators ($\text{DO}_2$ for short).
 Both techniques require $2d$ random variables to visualize a $d$-dimensional Gaussian, and both techniques produce orbits which are confined to a random plane.
-In fact, Great Circle animations are a subset of measure 0 of the $\text{DO}_2$ family: the former always produces circles, but the latter can also produce ellipses.
-Therefore, we take the $\text{DO}_2$ results as a proxy for the quality of the Great Circle animations.
+In fact, great circle animations are a subset of measure zero of the $\text{DO}_2$ family: the former always produces circles, but the latter can also produce ellipses.
+Therefore, we assume that our results for $\text{DO}_2$ animations are a useful heuristic for the quality of the great circle animations, unless stated otherwise.
 
 \subsection{Kinematic Properties}
 \label{sub:kinematic_properties}
 
-One way to compare Gaussian Oscillators is to compute their most basic kinematic properties: velocity and acceleration.
-These distributions capture information which eludes the marginal \textit{position} distribution (which is the same by definition for all Gaussian Oscillators).
+Gaussian animations treat the curve as a quasi-physical moving object.
+We therefore investigate the most basic kinematic properties of that motion: velocity and acceleration.
+These distributions capture information which eludes the marginal \textit{position} distribution (which is the same by definition for all Gaussian oscillators).
 
 <<kinematics_prep, include=FALSE>>=
 approximate_derivative <- function(mat, t, deriv=0) {
@@ -339,7 +359,7 @@ approximate_derivative <- function(mat, t, deriv=0) {
     return (mat)
   }
   mat.aug <- rbind(mat, mat[1, ])
-  t.aug <- c(t, t[1])
+  t.aug <- c(t, sum(tail(t, 2) * c(-1, 2)))
   approximate_derivative(diff(mat.aug) / diff(t.aug), t, deriv - 1)
 }
 
@@ -383,11 +403,11 @@ graphs.deloc <- graphs(label="Smooth Timetraces", mat=interp.deloc, n=N.draws)
 quickie.text <- function(x, ...) textGrob(x, just='center', gp=gpar(fontsize=15), ...)
 kinematics.caption <- sprintf(
   paste(
-    'The basic kinematics of two types of Gaussian Oscillators:',
+    'The basic kinematics of two types of Gaussian oscillators:',
     'the standard trigonometric oscillators, and the ``delocalized oscillators\'\' this paper introduces.',
-    'Both populations are illustrated with %d draws (grey), one of which is randomly chosen and highlighted for illustration.',
+    'Both populations are illustrated with %d sample paths (grey), one of which is randomly chosen and highlighted for illustration.',
     'The velocity and acceleration graphs for the Trigonometric oscillators clearly show that keyframes are treated specially.',
-    'By contrast, all times for the Delocalized oscillators are statistically equivalent.'),
+    'By contrast, all times for the delocalized oscillators are statistically equivalent.'),
   N.draws
   )
 @
@@ -404,14 +424,14 @@ grid.arrange(nullGrob(),
              widths=c(0.23, 1, 1, 1))
 @
 Figure \ref{fig:kinematics} shows the results.
-The velocity distribution for interpolation changes discontinuously at every keyframe.
+The velocity curves for interpolation change discontinuously at every keyframe.
 This makes the acceleration effectively infinite there.
 At every keyframe, the oscillator receives an ``impulse,'' which distractingly changes its motion.
-By contrast, the delocalized oscillators' motion is perfectly smooth.
+By contrast, the delocalized oscillators' motion is perfectly fluid.
 Each time is statistically equivalent to each other time --- not just for the oscillator's position, but for its velocity and acceleration too.
 The keyframes are not special, because they do not exist.
 
-To understand these different behaviours, we view these oscillators as Gaussian Processes, and compare their covariance functions $k(t_1, t_2)$.
+To understand these different behaviours, we view these oscillators as Gaussian processes, and compare their covariance functions $k(t_1, t_2)$.
 Delocalized oscillators have a \textit{stationary} covariance (Equation \ref{eqn:do_covariance}): it depends only on $(t_2 - t_1)$, not on $t_1$ or $t_2$ individually.
 Trigonometric interpolation has a non-stationary covariance:
 \begin{equation}
@@ -421,8 +441,9 @@ where $b_i(t)$ is the $i$th basis function (see Figure \ref{fig:basis}).\footnot
   Note that the covariance from one keyframe to the next (e.g., $k_\text{TI}(0, 1)$) is 0, as we would expect.
   But the covariance \textit{between} keyframes can be quite high, even for the same interval, e.g., $k_\text{TI}(0.5, 1.5) = \frac{1}{2}$.
 }
+This non-stationarity gives $k_\text{TI}(t_1, t_2)$ a stepped, ``blocky'' appearance (see Figure \ref{fig:cov_mat}(a)).
 
-To avoid any frames being treated specially, we should prefer Gaussian Oscillators with stationary covariance.
+To avoid any frames being treated specially, we should prefer Gaussian oscillators with stationary covariance.
 If we further want motion that is smooth and natural, we should choose a covariance which is continuous and differentiable at $t_1 = t_2$.\footnote{
   Since covariance functions are symmetric, this implies the slope should be 0 here.
 }
@@ -433,12 +454,12 @@ If we further want motion that is smooth and natural, we should choose a covaria
 Gaussian oscillators are marginally Gaussian by definition.
 However, this property applies to \textit{populations} of oscillators, not the individual oscillators themselves.
 
-To see this point starkly, consider the simplest Gaussian Oscillator: a single Gaussian draw, constant for all time.
+To see this point starkly, consider the simplest Gaussian oscillator: a single Gaussian draw, constant for all time.
 The marginal distribution over all such oscillators is clearly the standard Gaussian.
 But the marginal distribution for a \textit{single} oscillator is a point mass, which is very different from a Gaussian.
 
 <<ks_data, include=FALSE>>=
-# The number of Gaussian Oscillators of each type to construct.  Increasing
+# The number of Gaussian oscillators of each type to construct.  Increasing
 # this number gives more reliable density estimation.
 num_oscillators <- ifelse(draft_mode, 0.5e3, 1e6)
 
@@ -465,7 +486,7 @@ ks.independent <- lapply(equivalent_draws,
 # number, the more precision we have for *individual* oscillators' KS
 # statistics.
 num.continuous.points <- 1000
-# Now we can compute the statistics for the Gaussian Oscillators (and a few
+# Now we can compute the statistics for the Gaussian oscillators (and a few
 # more which aren't GOs).  Start by computing a matrix with enough normals for
 # everything; we'll just take the top N rows to get N independent draws.
 common.seed <- RandomNormals(max(equivalent_draws), num_oscillators)
@@ -492,14 +513,14 @@ ks.all <- rbind(
     ListToDataFrame(ks.trig, 'Trigonometric Interpolation'),
     ListToDataFrame(ks.delocalized, 'Delocalized (this work)'))
 ks.figure.caption <- sprintf(
-    paste('How faithfully does each Gaussian Oscillator represent the normal',
+    paste('How faithfully does each Gaussian oscillator represent the normal',
           'distribution? This figure uses the Kolmogorov-Smirnov distribution',
           'to answer that question.  (Each curve is a histogram of %s draws.)',
           '(a) Independent draws from the normal distribution (which are not',
-          'Gaussian Oscillators) provide a basis for comparison.  As expected,',
+          'Gaussian oscillators) provide a basis for comparison.  As expected,',
           'taking more draws shifts the distribution towards smaller values,',
           'indicating a better fit.',
-          '(b), (c), and (d) show the Gaussian Oscillators for %d, %d, and %d',
+          '(b), (c), and (d) show the Gaussian oscillators for %d, %d, and %d',
           'draws, respectively, alongside the same number of independent',
           'draws.  Trigonometric interpolation is always more faithful than',
           'the same number of independent draws, but the delocalized',
@@ -511,29 +532,29 @@ ks.figure.caption <- sprintf(
     equivalent_draws[3])
 @
 
-This motivates us to evaluate each family of Gaussian Oscillators according to how faithfully its members represent the standard Gaussian distribution.
-The Kolmogorov-Smirnov (KS) statistic --- essentially, the widest vertical gap between two CDFs --- is a convenient, widely-used technique to compare two distributions.
-The KS \textit{distribution} summarizes the fidelity of a Gaussian Oscillator \textit{family}: distributions which tend toward smaller values indicate more faithful families.\footnote{
-  Of course, the same idea could be applied to any other metric which compares probability distributions.
+This motivates us to evaluate each family of Gaussian oscillators according to how faithfully its individual members represent the standard Gaussian distribution.
+The Kolmogorov-Smirnov (KS) statistic --- essentially, the widest vertical gap between two cumulative distribution functions --- is a convenient, widely-used technique to compare two distributions.
+The KS \textit{distribution} summarizes the fidelity of a Gaussian oscillator \textit{family}: distributions which tend toward smaller values indicate more faithful families.\footnote{
+  Of course, we could compute distributions for any other metric which compares probability distributions.
+  The KS metric is not special; we chose it because it is both simple and widely used.
 }
 
 As a basis for comparison, consider the KS distribution for a given number $N$ of independent normal draws, without interpolation.\footnote{
-  To be clear: these are not Gaussian Oscillators; they are merely a benchmark.
+  To be clear: these are not \textit{themselves} Gaussian oscillators; they are merely a benchmark.
 }
 Larger samples represent their distributions more faithfully; therefore, we expect their KS distributions to shift towards zero.
 Figure \ref{fig:ks_distribution}(a) shows the results for \Sexpr{equivalent_draws[1]}, \Sexpr{equivalent_draws[2]}, and \Sexpr{equivalent_draws[3]} draws.
 It is clear that larger samples indeed have smaller KS statistics.
 
-The next three subfigures compare two types of Gaussian Oscillator\footnote{
-  We cannot include the Great Circles approach of \citep{hennig-tr-is-8}, since technically they are not Gaussian Oscillators.
-  Individual dimensions are not independent; they are constrained so that the overall magnitude stays constant.
-  However, each dimension is \textit{marginally} equivalent to the $N=2$ delocalized oscillators.
-  Thus, the purple curve in Figure \ref{fig:ks_distribution}(b) can be taken to apply to Hennig's work, but the subsequent purple curves cannot (since Great Circles are restricted to $N=2$).
-} --- trigonometric interpolation, and the delocalized oscillators this paper introduces --- to the equivalent number of independent draws.
+The next three subfigures compare two types of Gaussian oscillator --- trigonometric interpolation, and the delocalized oscillators this paper introduces --- to the equivalent number of independent draws.
 The figure shows that interpolating between the independent draws (orange curve) more faithfully represents the normal distribution than the independent draws themselves (green curve), since the orange curve puts more mass on lower KS values.
 However, the delocalized oscillators (purple curve) are significantly better than either in every case shown here.
 
 Thus, not only is their motion more smooth and natural, but the delocalized oscillators also represent the standard normal more faithfully.
+
+However, this conclusion only holds for a fixed number of samples.
+If more samples can be added continually (i.e., for an online animation), then the fidelity will continue to improve the longer the animation runs.
+Interpolation has this capability, and delocalized oscillators do not.
 
 <<ks_distribution, echo=FALSE, cache=FALSE, fig.cap=ks.figure.caption>>=
 KsFigure <- function(i) {
@@ -616,7 +637,7 @@ interpolation_plot <- CovarianceMatrixPlot(
       return (total)
     })
 delocalized_plot_loop <- CovarianceMatrixPlot(
-    'b) Delocalized Oscillators\n(Short loop)',
+    'b) Delocalized oscillators\n(Short loop)',
     function(a, b, n=4) {
       total <- 0
       for (i in 1:(n/2)) {
@@ -625,7 +646,7 @@ delocalized_plot_loop <- CovarianceMatrixPlot(
       2 * total / n
     })
 delocalized_plot_inf <- CovarianceMatrixPlot(
-    'c) Delocalized Oscillators\n(Non-looping)',
+    'c) Delocalized oscillators\n(Non-looping)',
     function(a, b) {
       z <- pi * (a - b)
       return (ifelse(a == b, 1, sin(z) / z))
@@ -634,8 +655,8 @@ cov_mat.caption <- paste(
     'Example covariance functions $k(t_1, t_2)$ for various types of animations.',
     'The black bars represent the unit-time autocorrelation; the ideal covariance function would be zero everywhere outside this central stripe.',
     'a) Trigonometric interpolation. The covariance vanishes at long times, but is nonstationary (leading to jerky motion).',
-    'b) Delocalized oscillators with a short period.  The covariance is stationary, but intermediate times have strong anticorrelation.',
-    'c) Delocalized oscillators with infinite period (i.e., non-looping).  The anticorrelation is much smaller, but still nonzero.'
+    'b) Looping delocalized oscillators with a short period.  The covariance is stationary, but intermediate times have strong anticorrelation.',
+    'c) Delocalized oscillators in the infinite-period limit (i.e., non-looping).  The anticorrelation is still nonzero, but much smaller.'
                          )
 @
 
@@ -648,7 +669,7 @@ grid.arrange(nrow=1, widths=c(1, 1, 1, 0.35),
              LegendOnly(interpolation_plot))
 @
 
-Trigonometric interpolation achieves perfectly uncorrelated results, but only for keyframes.
+Trigonometric interpolation achieves perfectly uncorrelated unit-time intervals, but only for keyframes.
 Between the keyframes, the same draw $\varepsilon_i$ contributes to both values, meaning the correlation will be nonzero.
 In the worst case, the two values at $\Delta t = \pm \frac{1}{2}$ relative to a keyframe have a correlation of $\frac{1}{2}$, which is rather high.
 
@@ -660,7 +681,7 @@ The unit-time autocorrelation for delocalized oscillators is
 Thus, delocalized oscillators are slightly anticorrelated at single-unit intervals\footnote{
 This is valid at all times, since unlike interpolated animation, the delocalized oscillators are stationary.}.
 For small $N$, this autocorrelation is worse than interpolation, even becoming as high as -1 (perfect anticorrelation) for the $N = 2$ case.\footnote{
-  This anticorrelation of -1 clearly also applies to Great Circle animation.
+  This anticorrelation of -1 clearly also applies to great circle animation.
   One time unit corresponds to half the period; therefore, all values are negated.
 }
 However, for $N > 4$, delocalized oscillators are always better than the worst case for interpolation.
@@ -677,28 +698,31 @@ where $\sinc(0) = 1$, and $\sinc(x) \equiv \sin(x) / x \,\,\,\, \forall x \ne 0$
 
 Thus, in the infinite limit, the autocorrelation vanishes at all intervals which are nonzero integer multiples of 1.
 The disadvantage is the considerable computational expense, both in time and space (as mentioned in Section \ref{sub:connection_with_gaussian_processes}).
-Furthermore, most intervals longer than one unit have a small but nonzero autocorrelation (see Figure \ref{fig:cov_mat}(c).
+Furthermore, most intervals longer than one unit have a small but nonzero autocorrelation (see Figure \ref{fig:cov_mat}(c)).
 
 \subsection{Summary of Metrics}
 \label{sub:summary_of_metrics}
 
-Overall, the delocalized oscillators this paper introduces compare very favorably to interpolation.
+Having proposed criteria to judge Gaussian oscillators, we now assess their relative importance.
 
-Several virtues are shared equally by both techniques.
-Each can incorporate arbitrarily many samples, to represent the standard Gaussian more faithfully (as measured by the KS distribution).
-Moreover, they can be efficiently computed using basis functions.
+The most important metric is the Kolmogorov-Smirnov distribution, because it measures how well individual animations represent the standard normal.
+Delocalized oscillators and great circles exhibit significantly better KS distributions than interpolation, if the number of independent samples is fixed.
+Taking more samples improves every technique except great circles, which cannot use more than two.
+These considerations point to delocalized oscillators as the most faithful offline technique considered here.
+Interpolation, however, performs better in the online case, since it can perpetually incorporate new random samples.
 
-Interpolation's main advantage is that its autocorrelation vanishes completely at long intervals: longer than 1 unit for keyframes, and longer than 2 units for all frames.
-This also gives interpolation an advantage for online visualizations, where new points can continuously be generated and incorporated.
-(By comparison, the length of a delocalized oscillator must be specified ahead of time.)
+The next most important criterion is the quality of motion.
+Ideally, no frames should have preferred status, and the motion should be smooth.
+Delocalized oscillators and great circles excel here, while interpolation produces distracting, jerky motion.
+(Note that any future techniques with smooth, stationary covariance would also yield excellent quality motion.)
 
-Delocalized oscillators have two considerable advantages.
-First, they represent the standard Gaussian considerably better than interpolation using the same number of independent samples.
-Second, their motion is fluid and natural: unlike interpolation, no frames have any special status.
+Finally, we want to maximize the mutual independence of all frames, by minimizing autocorrelation beyond what is necessary.
+Here, no single technique is clearly best.
+Interpolation limits autocorrelation to intervals of at most two units, but the precise distance is different for different frames.
+Delocalized oscillators with long period have low autocorrelation at intervals beyond 1 unit, but it never quite reaches zero.
 
-Great circles share many of the same advantages as delocalized oscillators, including the smooth motion and relatively good KS statistics.
-However, they cannot incorporate more than two independent Gaussian draws.
-This limits how faithfully a great circle animation can represent the Gaussian distribution.
+Overall delocalized oscillators considerably improve on the state of the art for offline Gaussian animations.
+They represent the normal distribution much more faithfully, and they do so with fluid, natural motion, treating no frames specially.
 
 \section{Future Work}
 \label{sec:future_work}
@@ -711,7 +735,7 @@ The question naturally arises which other distributions can be visualized in thi
 Some distributions are clearly impossible, but several others seem tractable.
 
 First, consider a ``nearly-Gaussian'' distribution, i.e., one whose probability density $\rho(x)$ differs from the Gaussian density $\nu(x)$ by some known factor (which naturally depends on $x$).
-The time which a standard Gaussian Oscillator spends at $x$ is proportional to $\nu(x)$.
+The time which a standard Gaussian oscillator spends at $x$ is proportional to $\nu(x)$.
 To make it proportional to $\rho(x)$ instead, we can modulate the delay before the next frame by a factor $(\rho(x) / \nu(x))$.
 In essence, we are warping time to capture the subtle departures of the true distribution from the Gaussian.
 
@@ -728,7 +752,7 @@ Discrete distributions present a greater challenge: obviously, they cannot be re
 However, even here there are special cases which admit partial success.
 Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\cite{hklm2010}).
 If we perform an Anscombe transform\cite{anscombe1948}, the transformed data follows the Gaussian distribution to an excellent approximation.
-One could animate the transformed distribution with Gaussian Oscillators, ``un-transform'' the result, and round to the nearest integer.
+One could animate the transformed distribution with Gaussian oscillators, ``un-transform'' the result, and round to the nearest integer.
 While the result would not be truly continuous, it would change in an ordered way which is easy for the eye to follow.
 
 Animations are highly useful for visualizing complex distributions.
@@ -737,22 +761,14 @@ With the Gaussian case now well in hand, other distributions beg to be explored.
 \subsection{Alternative time-domain covariance functions}
 \label{sub:alternative_time_domain_covariance_functions}
 
-Let us consider again the quality metrics outlined in Section \ref{sec:comparison}, and try to engineer a superior Gaussian Oscillator.
+Let us consider again the criteria outlined in Section \ref{sec:comparison}, and try to engineer a superior Gaussian oscillator.
 
-First, we want every individual oscillator to represent the normal distribution faithfully (as measured by the KS distribution from Section \ref{sub:statistical_properties}).
-The best possible way to achieve this would be an endless, non-looping animation, which continuously incorporates new Gaussian draws.
-Gaussian Processes cannot generally accomplish this with finite resources, since every new value requires knowledge of all previous values, at least in principle.
-However, certain special types of Gaussian Processes can do this --- for instance, interpolation.
+The most important criterion is the KS distribution, since it is vital that the animation represents the normal distribution faithfully.
+The best possible way to fulfill this is to use an online technique, which can perpetually incorporate new random samples.
+We also want smooth, natural motion, with no frames treated specially; this implies a smooth, stationary covariance function.
+Finally, the autocorrelation should be zero for all intervals longer than one unit.
 
-Second, we want the motion to be smooth and natural, with all frames exactly equivalent to one another.
-Interpolation fails here, since it singles out ``keyframes'' for special treatment.
-To fulfill this requirement, we should focus on covariance functions which are stationary and smooth (as with the delocalized oscillators).
-
-Finally, we want autocorrelation to vanish at all intervals longer than one unit.
-Both trigonometric interpolation and delocalized oscillators fall short of this goal.
-Trigonometric interpolation achieves it only for keyframes, while delocalized oscillators exhibit damped autocorrelation oscillations at longer times (Figure \ref{fig:cov_mat}).
-
-There exists a class of covariance covariance functions which can satisfy all these constraints simultaneously: \textit{smooth, compact support}.
+We can satisfy all these criteria simultaneously if our covariance has \textit{compact support}.
 For example, consider this piecewise polynomial covariance function:
 \begin{equation}
   k(\tau) =
@@ -762,50 +778,46 @@ For example, consider this piecewise polynomial covariance function:
   \end{cases}
 \end{equation}
 where $\tau$ is the time interval magnitude $|t_2 - t_1|$.
-Curves sampled from this distribution are twice differentiable everywhere; hence, their motion will be smooth and natural.
+Curves sampled from this distribution are twice differentiable everywhere\cite{3569}; hence, their motion will be smooth and natural.
 Their autocorrelation completely vanishes at all intervals longer than one unit: the best possible result.
 The covariance is stationary, so no frames can be special in any way.
 Finally, they permit infinite non-repeating animations with finite resources\footnote{
   The appendix explains in detail how to do this.
 }, just as interpolation does.
 
-Considering these advantages, smooth covariance functions with compact support seem difficult to surpass.
-The challenge is to build software which supports infinite non-repeating animations in a format which can be widely shared.
-HTML/CSS/javascript is a promising target, since it is widely available and highly cross-platform.
-The \texttt{R} programming language\cite{rlang} already supports packages which can output analysis to HTML --- for example, \texttt{shiny}\cite{shiny}.
-Such a package could be augmented to include javascript which continually updates the points' coordinates, based on newly generated random variables.
-
 This, then, is the bright future we envision for animated uncertainty visualization.
-The uncertainty can be analyzed in \texttt{R}, as usual --- but rather than a static image or animated \texttt{.gif}, the output is an interactive web app.
-The curve continuously moves in a smooth and natural way, never repeating its position, visualizing more and more of the distribution which the analysis produced.
+\texttt{R} packages which output interactive web apps, such as \texttt{shiny}\cite{shiny}, can be augmented to support animated output.
+Rather than a static image, or a finite looping \texttt{.gif}, the curve continuously moves in a smooth and natural way: never repeating its position, and visualizing more and more of the distribution.
 
 \section{Conclusions}
 \label{sec:conclusions}
 
 Animations are a useful and beautiful technique to visualize uncertainty in curves and surfaces.
-This paper introduced a unifying concept, the ``Gaussian Oscillator,'' to compare existing techniques and pave the way for future ones.
-One such new technique, \textit{delocalized oscillators}, has many advantages: its motion is fluid and natural; it is efficient to compute; and it represents the underlying distribution more completely.
-By exploiting the connection to Gaussian Processes, we can hope to engineer still better Gaussian Oscillators in the future.
+This paper introduced a unifying concept, the ``Gaussian oscillator,'' to compare existing techniques and pave the way for future ones.
+For the first time, we have measured the quality of individual animations rather than populations; in so doing, we have uncovered significant differences between techniques.
+We also introduced a new technique, \textit{delocalized oscillators}, with many advantages: its motion is fluid and natural; it is efficient to compute; and it represents the underlying distribution more completely.
+Finally, we have revealed that Gaussian animations were simply a special case of Gaussian processes all along.
+We expect this relationship will bear much fruit and lead to even better animations in the future.
 
 \section{Acknowledgements}
 \label{sec:acknowledgements}
 
 I gratefully acknowledge the help and support which made this work possible.
 First, I am thankful to the National Institute of Standards and Technology, where I was employed when I initially developed delocalized oscillators.
-Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian Processes.
+Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
 I am also thankful to Melissa DeLucchi, who provided valuable feedback on a draft of this paper.
 
-\section*{Appendix: Extending Gaussian Oscillators in time}
-\label{sec:appendix_extending_gaussian_oscillators_in_time}
+\section*{Appendix: efficient online animations}
+\label{sec:appendix_efficient_online_animations}
 
-Suppose we have a Gaussian Oscillator timetrace, consisting of $n$ points.
+Suppose we have a Gaussian oscillator timetrace, consisting of $n$ points.
 Can we extend the timetrace by computing the $(n + 1)$st?
 If so, what is the computational cost?
 
-This appendix will show that we \textit{can} extend Gaussian Oscillators, but the computational cost is unacceptably high.
-Most Gaussian Oscillators are $\order(n^2)$ in both time and space.
+This appendix will show that we \textit{can} extend Gaussian oscillators, but the computational cost is unacceptably high.
+Most Gaussian oscillators are $\order(n^2)$ in both time and space.
 Oscillators with \textit{compact support} are the exception: they can be computed very efficiently ($\order(1)$ with respect to $n$).
 This suggests that compact support oscillators represent the future of online Gaussian animations.
 
@@ -884,7 +896,7 @@ This animation will consume all system resources at an ever-increasing pace, whi
 \subsection*{Compact Support}
 \label{sub:compact_support}
 
-To prevent this disaster, suppose the covariance matrix has compact support, so that the new value is correlated only with the previous $m$.
+To prevent this disaster, suppose the covariance matrix has compact support, so that the new value is correlated only with a finite number of previous values; say, at most $m$.
 This means that $\left\{k_1, \cdots, k_{n - m} \right\}$ are all 0.
 Equation \ref{eqn:go_cov_old_new} implies that $\left\{\ell_1, \cdots, \ell_{n - m} \right\}$ are also 0.
 
@@ -911,8 +923,8 @@ while (TRUE) {
 }
 @
 
-To summarize: extending an $n$-point Gaussian Oscillator timetrace is generally $\order(n^2)$ in both time and space, which is unacceptable.
-But if the Gaussian Oscillator has compact support, both costs drop to $\order(m^2)$ (where $m$ is small and constant).
+To summarize: extending an $n$-point Gaussian oscillator timetrace is generally $\order(n^2)$ in both time and space, which is unacceptable.
+But if the Gaussian oscillator has compact support, both costs drop to $\order(m^2)$ (where $m$ is small and constant).
 And if we furthermore evaluate that oscillator only at constant time intervals, all costs drop further to $\order(m)$.
 
 \bibliographystyle{plain}
