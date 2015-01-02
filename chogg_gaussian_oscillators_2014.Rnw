@@ -1,6 +1,7 @@
 \documentclass[12pt,letterpaper]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{natbib}
+\usepackage{hyperref}
 
 \DeclareMathOperator{\sinc}{sinc}
 \newcommand{\transpose}{\intercal}
@@ -44,12 +45,11 @@ LegendOnly <- function(a.gplot) {
 @
 
 \begin{abstract}
-  We explore using animations to visualize uncertainty in curves and surfaces.
-  First, we define the \textit{Gaussian oscillator}, a unifying concept which encompasses existing techniques (and helps develop new ones).
-  We propose criteria to judge the quality of different animation techniques.
-  These include the Kolmogorov-Smirnov \textit{distribution}: the first quantitative metric to measure how faithfully an animation represents its underlying distribution.
-  This paper also introduces a new animation technique, the \textit{delocalized oscillator}, which combines the best traits of existing techniques: these animations feature fluid, natural motion, and also represent the underlying distribution more faithfully and fully.
-  Finally, we provide a roadmap to develop even better animations in the future, by leveraging a key insight: that Gaussian animations are nothing more than a special type of Gaussian processes.
+  We investigate using animations to visualize uncertainty in curves and surfaces.
+  First, we define the \textit{Gaussian oscillator}, a unifying concept which encompasses existing and future approaches.
+  We then develop a new technique, the \textit{delocalized oscillator}, which combines the best traits of previous ones: these animations feature fluid, natural motion, and also better represent the underlying distribution.
+  We propose the first metric to judge animation techniques by the quality of individual animations (rather than the entire population): the Kolmogorov-Smirnov distribution.
+  Finally, we suggest how to develop even better animations in the future by leveraging a key insight: that Gaussian animations are nothing more than time-domain Gaussian processes.
 \end{abstract}
 
 \section{Introduction}
@@ -101,7 +101,7 @@ interpolation.caption <- sprintf(
     paste("Interpolation illustrated for a standard 1-D Gaussian.",
           "(a) A single set of normal draws interpolated by three methods.",
           "It is not obvious from this figure which of these methods, if any, is best.",
-          "(b) Pointwise quantiles for interpolating %s random draws.",
+          "(b) Pointwise quantiles for interpolating %s sets of random draws.",
           "These show that linear and spline interpolation are unacceptable, because the population statistics are different between the keyframes.",
           "Only trigonometric interpolation yields the same marginal distribution at all times."),
     formatC(num.interpolated.curves, big.mark=',', format='fg'))
@@ -124,7 +124,7 @@ p.interp <- InterpolationQuantilePlot(
     size=line.size)
 @
 
-<<interpolation, cache=FALSE, echo=FALSE, fig.cap=interpolation.caption>>=
+<<interpolation, echo=FALSE, fig.cap=interpolation.caption>>=
 grid.arrange(p.concept + scale_colour_brewer('', palette='Set2'),
              p.interp + scale_colour_brewer('', palette='Set2'),
              ncol=1)
@@ -145,8 +145,8 @@ Interpolation is flexible: it can incorporate arbitrarily many independent draws
 The downside is that not all frames are equivalent: keyframes have preferred status, and the motion changes discontinuously there, which is distracting.
 
 Great circle animations\cite{hennig-tr-is-8} do not have this defect; they treat all frames equally in every way.
-They also represent the normal distribution more faithfully than interpolated animations for the same number of samples, as Section \ref{sub:statistical_properties} elaborates.
-Their shortcoming is that they cannot incorporate more than two samples, and therefore cannot further improve their fidelity.
+They also represent the normal distribution more faithfully than interpolated animations for the same number of samples, as Section \ref{sub:statistical_properties} will elaborate.
+Their shortcoming is that they cannot incorporate more than two samples; therefore, they can only visualize a small part of the distribution.
 
 This paper proposes a unifying concept which encompasses these and future approaches: the \textit{Gaussian oscillator}.
 We then introduce a novel Gaussian oscillator technique, which combines the extensibility of interpolation with the smooth, natural motion of the great circles.
@@ -221,7 +221,7 @@ Moreover, ``online'' animations based on javascript and CSS do not require an in
 Offline animations suffer from a fundamental tension.
 With too few frames, they represent their underlying distribution poorly (as Section \ref{sub:statistical_properties} will elaborate).
 With too many frames, the file size becomes impractically huge.
-For these reasons, online animations are better when available.
+For this reason, online animations are preferable when available.
 
 \section{A New Way to Generate Animations}
 \label{sec:a_new_way_to_generate_animations}
@@ -309,7 +309,8 @@ Explicitly, given $N$ \iid~normal variates $\{\epsilon_1, \cdots, \epsilon_n\}$,
   \epsilon_{2i} \cos \left( \frac{2 \pi i t}{N} \right)
 \right].
 \end{equation}
-$\xi(t)$ is an offline, periodic technique, with period $N$.
+$\xi(t)$ is an offline technique.
+It produces periodic timetraces, with period $N$.
 Note that $\xi(t)$ is only defined for even $N$, since every $\sin(\cdot)$ needs a corresponding $\cos(\cdot)$.
 Considering the application, this restriction seems mild.
 
@@ -337,13 +338,186 @@ Note too that $\langle \xi(t)^2 \rangle = 1 \,\,\,\, \forall t$, as required for
 \label{sec:comparison}
 
 This section introduces criteria to judge the quality of each type of Gaussian oscillator.
-This analysis assumes that the animation is composed of independent Gaussian oscillators, which is usually the case.
+We will assume throughout that the animation is composed of independent Gaussian oscillators, which is usually the case.
 Great circle animations\cite{hennig-tr-is-8} violate this assumption, so we must begin by clarifying their role.
 
 Great circle animations are very similar to the $N = 2$ case of delocalized oscillators ($\text{DO}_2$ for short).
-Both techniques require $2d$ random variables to visualize a $d$-dimensional Gaussian, and both techniques produce orbits which are confined to a random plane.
-In fact, great circle animations are a subset of measure zero of the $\text{DO}_2$ family: the former always produces circles, but the latter can also produce ellipses.
-Therefore, we assume that our results for $\text{DO}_2$ animations are a useful heuristic for the quality of the great circle animations, unless stated otherwise.
+Both techniques require $2d$ random variables to visualize a $d$-dimensional Gaussian, and both techniques produce orbits which are confined to a (randomly-oriented) plane.
+In fact, great circle animation is a subset of measure zero of the $\text{DO}_2$ family: the former always produces circles, but the latter can also produce ellipses.
+Therefore, we assume that our results for $\text{DO}_2$ animations are a useful heuristic for the quality of the great circle animations, unless stated otherwise.\footnote{
+  Basically, this assumption amounts to ignoring the fact that the dimensions of a great circle animation are not independent.
+}
+
+\subsection{Statistical Properties}
+\label{sub:statistical_properties}
+
+How well does an animation technique represent the Gaussian distribution?
+This question has two possible meanings, but previous literature has only considered one.
+
+So far, people have taken this question to refer to a \textit{family} of animations.
+Specifically, they have constructed techniques such that the distribution of all animations is marginally Gaussian at each individual time.
+This interpretation is certainly important, which is why we built it in to the definition of the Gaussian oscillator (Equation \ref{eqn:go_marginal}).
+
+However, the properties of \textit{individual} animations are even more important; after all, visualizations contain only a single animation.
+We can take the frames of an animation to define a probability distribution, which we can also compare to the Gaussian.
+
+To see this distinction starkly, consider the simplest Gaussian oscillator: a single Gaussian draw, constant for all time.
+The marginal distribution over all such oscillators is clearly the standard Gaussian at all times.
+But the marginal distribution for a \textit{single} oscillator is a point mass, which is very different from a Gaussian.
+
+<<ks_data, include=FALSE>>=
+# The number of Gaussian oscillators of each type to construct.  Increasing
+# this number gives more reliable density estimation.
+num_reps <- ifelse(draft_mode, 1, 10)
+num_per_rep <- ifelse(draft_mode, 0.5e3, 1e5)
+num_oscillators <- num_reps * num_per_rep
+
+# The number of equivalent independent normal draws to test.
+equivalent_draws <- c(2, 10, 50)
+names(equivalent_draws) <- equivalent_draws
+
+# Utility function to compute the KS statistic on each column of a matrix.
+KsOnColumns <- function(m) {
+  apply(m, 2, function(v) ks.test(v, pnorm)$statistic)
+}
+
+RandomNormals <- function(n.rows, n.cols) {
+  matrix(rnorm(n=n.rows * n.cols), nrow=n.rows)
+}
+
+# We want to create the desired number of copies of each oscillator.
+# First, we'll do independent Gaussian draws as a reference point.
+for (i in 1:num_reps) {
+  new_draws <- lapply(equivalent_draws,
+                      function(num) {
+                        KsOnColumns(RandomNormals(num, num_per_rep))
+                      })
+  system(sprintf('touch progress_indep_%d', i))
+  if (exists('ks.independent') && length(ks.independent) > 0) {
+    ks.independent <- mapply(c, ks.independent, new_draws, SIMPLIFY=FALSE)
+  } else {
+    ks.independent <- new_draws
+  }
+}
+# How many points to evaluate continuous timetraces at.  The higher this
+# number, the more precision we have for *individual* oscillators' KS
+# statistics.
+num.continuous.points <- 1000
+# Now we can compute the statistics for the Gaussian oscillators (and a few
+# more which aren't GOs).  Start by computing a matrix with enough normals for
+# everything; we'll just take the top N rows to get N independent draws.
+KsForMethod <- function(matrix.function, label='none') {
+  FUN <- function(num) {
+    KsOnColumns(matrix.function(num,
+                                TimeSequence(num,
+                                             num.continuous.points,
+                                             loop=TRUE))
+                %*% RandomNormals(num, num_per_rep))
+  }
+  remove('ks')
+  for (i in 1:num_reps) {
+    new_draws <- lapply(equivalent_draws, FUN)
+    system(sprintf('touch progress_%s_%d', label, i))
+    if (exists('ks') && length(ks) > 0) {
+      ks <- mapply(c, ks, new_draws, SIMPLIFY=FALSE)
+    } else {
+      ks <- new_draws
+    }
+  }
+  return (ks)
+}
+ks.trig <- KsForMethod(InterpTrig, 'trig')
+ks.delocalized <- KsForMethod(DelocalizedMatrix, 'deloc')
+
+ListToDataFrame <- function(L, name) {
+  d <- cbind(melt(do.call(cbind.data.frame, L)), type=name)
+  names(d)[which(names(d) == 'variable')] <- 'num.draws'
+  names(d)[which(names(d) == 'value')] <- 'x'
+  return (d)
+}
+ks.all <- rbind(
+    ListToDataFrame(ks.independent, 'Independent Draws'),
+    ListToDataFrame(ks.trig, 'Trigonometric Interpolation'),
+    ListToDataFrame(ks.delocalized, 'Delocalized (this work)'))
+ks.figure.caption <- sprintf(
+    paste('How faithfully does each Gaussian oscillator represent the normal',
+          'distribution? This figure uses the Kolmogorov-Smirnov distribution',
+          'to answer that question.  (Each curve is a histogram of %s draws.)',
+          '(a) Independent draws from the normal distribution (which are not',
+          'Gaussian oscillators) provide a basis for comparison.  As expected,',
+          'taking more draws shifts the distribution towards smaller values,',
+          'indicating a better fit.',
+          '(b), (c), and (d) show the Gaussian oscillators for %d, %d, and %d',
+          'draws, respectively, alongside the same number of independent',
+          'draws.  Trigonometric interpolation is always more faithful than',
+          'the same number of independent draws, but the delocalized',
+          'oscillators this paper introduces are significantly better than',
+          'both.'),
+    formatC(num_oscillators, big.mark=',', format='fg'),
+    equivalent_draws[1],
+    equivalent_draws[2],
+    equivalent_draws[3])
+@
+
+This motivates us to evaluate each family of Gaussian oscillators according to how faithfully its individual members represent the standard Gaussian distribution.
+The Kolmogorov-Smirnov (KS) statistic --- essentially, the widest vertical gap between two cumulative distribution functions --- is a convenient, widely-used technique to compare two distributions.
+The KS \textit{distribution} summarizes the fidelity of a Gaussian oscillator \textit{family}: distributions which tend toward smaller values indicate more faithful families.\footnote{
+  Of course, we could compute distributions for any other metric which compares probability distributions.
+  The KS metric is not special; we chose it because it is both simple and widely used.
+}
+
+As a basis for comparison, consider the KS distribution for a given number $N$ of independent normal draws, without interpolation.\footnote{
+  To be clear: these are not \textit{themselves} Gaussian oscillators; they are merely a benchmark.
+}
+Larger samples represent their distributions more faithfully; therefore, we expect their KS distributions to shift towards zero.
+Figure \ref{fig:ks_distribution}(a) shows the results for \Sexpr{equivalent_draws[1]}, \Sexpr{equivalent_draws[2]}, and \Sexpr{equivalent_draws[3]} draws.
+It is clear that larger samples indeed have smaller KS statistics.
+
+The next three subfigures compare two types of Gaussian oscillator --- trigonometric interpolation, and the delocalized oscillators this paper introduces --- to the equivalent number of independent draws.
+The figure shows that interpolating between the independent draws (orange curve) more faithfully represents the normal distribution than the independent draws themselves (green curve), since the orange curve puts more mass on lower KS values.
+However, the delocalized oscillators (purple curve) are significantly better than either in every case shown here.
+
+Thus, not only is their motion more smooth and natural, but the delocalized oscillators also represent the standard normal more faithfully.
+
+However, this conclusion only holds for a fixed number of samples.
+If more samples can be added continually (i.e., for an online animation), then the fidelity will continue to improve the longer the animation runs.
+Interpolation has this capability, and delocalized oscillators do not.
+
+<<ks_distribution, echo=FALSE, fig.cap=ks.figure.caption>>=
+KsFigure <- function(i) {
+  d <- ks.all[i, ]
+  p <- (ggplot(data=d, aes(x=x, y=..density.., colour=type,
+                           group=interaction(type, num.draws)))
+        + geom_freqpoly(binwidth=diff(range(d$x))/60, size=line.size)
+        + theme(legend.position='none')
+        + scale_colour_brewer('', palette='Set2')
+        + scale_x_continuous('Kolmogorov-Smirnov statistic', limits=c(0, 1))
+        + scale_y_continuous('Density')
+        )
+}
+independent.peaks <- data.frame(draws=equivalent_draws,
+                                ks=c(0.5, 0.25, 0.125),
+                                density=c(3.7, 5.5, 11.5))
+colour.legend <- theme(legend.justification=c(1, 1),
+                       legend.position=c(1, 1),
+                       legend.margin=unit(0, 'mm'),
+                       legend.title=element_blank())
+suppressWarnings(grid.arrange(
+    ncol=2,
+    KsFigure(which(ks.all$type == 'Independent Draws'))
+       + geom_text(inherit.aes=FALSE, hjust=0, data=independent.peaks,
+                   aes(label=draws, x=ks, y=density))
+       + ggtitle('(a) Independent draws'),
+    KsFigure(which(ks.all$num.draws == 2))
+       + colour.legend
+       + ggtitle(sprintf('(b) %d draws', equivalent_draws[1])),
+    KsFigure(which(ks.all$num.draws == 10))
+       + colour.legend
+       + ggtitle(sprintf('(c) %d draws', equivalent_draws[2])),
+    KsFigure(which(ks.all$num.draws == 50))
+       + colour.legend
+       + ggtitle(sprintf('(d) %d draws', equivalent_draws[3]))))
+@
 
 \subsection{Kinematic Properties}
 \label{sub:kinematic_properties}
@@ -412,7 +586,7 @@ kinematics.caption <- sprintf(
   )
 @
 
-<<kinematics, cache=FALSE, echo=FALSE, fig.cap=kinematics.caption, fig.height=4>>=
+<<kinematics, echo=FALSE, fig.cap=kinematics.caption, fig.height=4>>=
 grid.arrange(nullGrob(),
              quickie.text('Position'),
              quickie.text('Velocity'),
@@ -442,169 +616,6 @@ where $b_i(t)$ is the $i$th basis function (see Figure \ref{fig:basis}).\footnot
   But the covariance \textit{between} keyframes can be quite high, even for the same interval, e.g., $k_\text{TI}(0.5, 1.5) = \frac{1}{2}$.
 }
 This non-stationarity gives $k_\text{TI}(t_1, t_2)$ a stepped, ``blocky'' appearance (see Figure \ref{fig:cov_mat}(a)).
-
-To avoid any frames being treated specially, we should prefer Gaussian oscillators with stationary covariance.
-If we further want motion that is smooth and natural, we should choose a covariance which is continuous and differentiable at $t_1 = t_2$.\footnote{
-  Since covariance functions are symmetric, this implies the slope should be 0 here.
-}
-
-\subsection{Statistical Properties}
-\label{sub:statistical_properties}
-
-Gaussian oscillators are marginally Gaussian by definition.
-However, this property applies to \textit{populations} of oscillators, not the individual oscillators themselves.
-
-To see this point starkly, consider the simplest Gaussian oscillator: a single Gaussian draw, constant for all time.
-The marginal distribution over all such oscillators is clearly the standard Gaussian.
-But the marginal distribution for a \textit{single} oscillator is a point mass, which is very different from a Gaussian.
-
-<<ks_data, include=FALSE>>=
-# The number of Gaussian oscillators of each type to construct.  Increasing
-# this number gives more reliable density estimation.
-num_oscillators <- ifelse(draft_mode, 0.5e3, 1e6)
-
-# The number of equivalent independent normal draws to test.
-equivalent_draws <- c(2, 10, 50)
-names(equivalent_draws) <- equivalent_draws
-
-# Utility function to compute the KS statistic on each column of a matrix.
-KsOnColumns <- function(m) {
-  apply(m, 2, function(v) ks.test(v, pnorm)$statistic)
-}
-
-RandomNormals <- function(n.rows, n.cols) {
-  matrix(rnorm(n=n.rows * n.cols), nrow=n.rows)
-}
-
-# We want to create the desired number of copies of each oscillator.
-# First, we'll do independent Gaussian draws as a reference point.
-ks.independent <- lapply(equivalent_draws,
-                         function(num) {
-                           KsOnColumns(RandomNormals(num, num_oscillators))
-                         })
-# How many points to evaluate continuous timetraces at.  The higher this
-# number, the more precision we have for *individual* oscillators' KS
-# statistics.
-num.continuous.points <- 1000
-# Now we can compute the statistics for the Gaussian oscillators (and a few
-# more which aren't GOs).  Start by computing a matrix with enough normals for
-# everything; we'll just take the top N rows to get N independent draws.
-common.seed <- RandomNormals(max(equivalent_draws), num_oscillators)
-KsForMethod <- function(matrix.function) {
-  lapply(equivalent_draws,
-         function(num) {
-           KsOnColumns(
-               matrix.function(
-                   num, TimeSequence(num, num.continuous.points, loop=TRUE))
-               %*% common.seed[1:num, ])
-         })
-}
-ks.trig <- KsForMethod(InterpTrig)
-ks.delocalized <- KsForMethod(DelocalizedMatrix)
-
-ListToDataFrame <- function(L, name) {
-  d <- cbind(melt(do.call(cbind.data.frame, L)), type=name)
-  names(d)[which(names(d) == 'variable')] <- 'num.draws'
-  names(d)[which(names(d) == 'value')] <- 'x'
-  return (d)
-}
-ks.all <- rbind(
-    ListToDataFrame(ks.independent, 'Independent Draws'),
-    ListToDataFrame(ks.trig, 'Trigonometric Interpolation'),
-    ListToDataFrame(ks.delocalized, 'Delocalized (this work)'))
-ks.figure.caption <- sprintf(
-    paste('How faithfully does each Gaussian oscillator represent the normal',
-          'distribution? This figure uses the Kolmogorov-Smirnov distribution',
-          'to answer that question.  (Each curve is a histogram of %s draws.)',
-          '(a) Independent draws from the normal distribution (which are not',
-          'Gaussian oscillators) provide a basis for comparison.  As expected,',
-          'taking more draws shifts the distribution towards smaller values,',
-          'indicating a better fit.',
-          '(b), (c), and (d) show the Gaussian oscillators for %d, %d, and %d',
-          'draws, respectively, alongside the same number of independent',
-          'draws.  Trigonometric interpolation is always more faithful than',
-          'the same number of independent draws, but the delocalized',
-          'oscillators this paper introduces are significantly better than',
-          'both.'),
-    formatC(num_oscillators, big.mark=',', format='fg'),
-    equivalent_draws[1],
-    equivalent_draws[2],
-    equivalent_draws[3])
-@
-
-This motivates us to evaluate each family of Gaussian oscillators according to how faithfully its individual members represent the standard Gaussian distribution.
-The Kolmogorov-Smirnov (KS) statistic --- essentially, the widest vertical gap between two cumulative distribution functions --- is a convenient, widely-used technique to compare two distributions.
-The KS \textit{distribution} summarizes the fidelity of a Gaussian oscillator \textit{family}: distributions which tend toward smaller values indicate more faithful families.\footnote{
-  Of course, we could compute distributions for any other metric which compares probability distributions.
-  The KS metric is not special; we chose it because it is both simple and widely used.
-}
-
-As a basis for comparison, consider the KS distribution for a given number $N$ of independent normal draws, without interpolation.\footnote{
-  To be clear: these are not \textit{themselves} Gaussian oscillators; they are merely a benchmark.
-}
-Larger samples represent their distributions more faithfully; therefore, we expect their KS distributions to shift towards zero.
-Figure \ref{fig:ks_distribution}(a) shows the results for \Sexpr{equivalent_draws[1]}, \Sexpr{equivalent_draws[2]}, and \Sexpr{equivalent_draws[3]} draws.
-It is clear that larger samples indeed have smaller KS statistics.
-
-The next three subfigures compare two types of Gaussian oscillator --- trigonometric interpolation, and the delocalized oscillators this paper introduces --- to the equivalent number of independent draws.
-The figure shows that interpolating between the independent draws (orange curve) more faithfully represents the normal distribution than the independent draws themselves (green curve), since the orange curve puts more mass on lower KS values.
-However, the delocalized oscillators (purple curve) are significantly better than either in every case shown here.
-
-Thus, not only is their motion more smooth and natural, but the delocalized oscillators also represent the standard normal more faithfully.
-
-However, this conclusion only holds for a fixed number of samples.
-If more samples can be added continually (i.e., for an online animation), then the fidelity will continue to improve the longer the animation runs.
-Interpolation has this capability, and delocalized oscillators do not.
-
-<<ks_distribution, echo=FALSE, cache=FALSE, fig.cap=ks.figure.caption>>=
-KsFigure <- function(i) {
-  d <- ks.all[i, ]
-  p <- (ggplot(data=d, aes(x=x, y=..density.., colour=type,
-                           group=interaction(type, num.draws)))
-        + geom_freqpoly(binwidth=diff(range(d$x))/60, size=line.size)
-        + theme(legend.position='none')
-        + scale_colour_brewer('', palette='Set2')
-        + scale_x_continuous('Kolmogorov-Smirnov statistic', limits=c(0, 1))
-        + scale_y_continuous('Density')
-        )
-}
-independent.peaks <- data.frame(draws=equivalent_draws,
-                                ks=c(0.5, 0.25, 0.125),
-                                density=c(3.7, 5.5, 11.5))
-colour.legend <- theme(legend.justification=c(1, 1),
-                       legend.position=c(1, 1),
-                       legend.margin=unit(0, 'mm'),
-                       legend.title=element_blank())
-suppressWarnings(grid.arrange(
-    ncol=2,
-    KsFigure(which(ks.all$type == 'Independent Draws'))
-       + geom_text(inherit.aes=FALSE, hjust=0, data=independent.peaks,
-                   aes(label=draws, x=ks, y=density))
-       + ggtitle('(a) Independent draws'),
-    KsFigure(which(ks.all$num.draws == 2))
-       + colour.legend
-       + ggtitle(sprintf('(b) %d draws', equivalent_draws[1])),
-    KsFigure(which(ks.all$num.draws == 10))
-       + colour.legend
-       + ggtitle(sprintf('(c) %d draws', equivalent_draws[2])),
-    KsFigure(which(ks.all$num.draws == 50))
-       + colour.legend
-       + ggtitle(sprintf('(d) %d draws', equivalent_draws[3]))))
-@
-
-\subsection{Time Correlation}
-\label{sub:time_correlation}
-
-In Monte Carlo simulations, autocorrelation is undesirable.
-In Gaussian animations, it is desirable at short time intervals; otherwise, the motion could not be continuous.
-Nevertheless, minimizing autocorrelation at longer times is still a virtue.
-
-A useful metric is the autocorrelation at time intervals of one unit.
-For interpolation, this is the mean time between independent draws; hence, we could reasonably hope for a unit-time autocorrelation near 0.
-The best possible result would be an autocorrelation of \textit{exactly} 0, for all time intervals longer than this.\footnote{
-  If the animation is periodic, this condition applies to the \textit{smallest} time interval between two points.
-  For example, an interval of one period should be treated as an interval of 0.
-}
 
 <<cov_mat_prep, include=FALSE>>=
 max_x <- 4
@@ -669,6 +680,25 @@ grid.arrange(nrow=1, widths=c(1, 1, 1, 0.35),
              LegendOnly(interpolation_plot))
 @
 
+To avoid any frames being treated specially, we should prefer Gaussian oscillators with stationary covariance.
+If we further want motion that is smooth and natural, we should choose a covariance which is continuous and differentiable at $t_1 = t_2$.\footnote{
+  Since covariance functions are symmetric, this implies the slope should be 0 here.
+}
+
+\subsection{Time Correlation}
+\label{sub:time_correlation}
+
+In Monte Carlo simulations, autocorrelation is undesirable.
+In Gaussian animations, it is desirable at short time intervals; otherwise, the motion could not be continuous.
+Nevertheless, minimizing autocorrelation at longer times is still a virtue.
+
+A useful metric is the autocorrelation at time intervals of one unit.
+For interpolation, this is the mean time between independent draws; hence, we could reasonably hope for a unit-time autocorrelation near 0.
+The best possible result would be an autocorrelation of \textit{exactly} 0, for all time intervals longer than this.\footnote{
+  If the animation is periodic, this condition applies to the \textit{smallest} time interval between two points.
+  For example, an interval of one period should be treated as an interval of 0.
+}
+
 Trigonometric interpolation achieves perfectly uncorrelated unit-time intervals, but only for keyframes.
 Between the keyframes, the same draw $\varepsilon_i$ contributes to both values, meaning the correlation will be nonzero.
 In the worst case, the two values at $\Delta t = \pm \frac{1}{2}$ relative to a keyframe have a correlation of $\frac{1}{2}$, which is rather high.
@@ -703,7 +733,7 @@ Furthermore, most intervals longer than one unit have a small but nonzero autoco
 \subsection{Summary of Metrics}
 \label{sub:summary_of_metrics}
 
-Having proposed criteria to judge Gaussian oscillators, we now assess their relative importance.
+We now summarize the relative merits of the various Gaussian animation techniques.
 
 The most important metric is the Kolmogorov-Smirnov distribution, because it measures how well individual animations represent the standard normal.
 Delocalized oscillators and great circles exhibit significantly better KS distributions than interpolation, if the number of independent samples is fixed.
@@ -721,7 +751,7 @@ Here, no single technique is clearly best.
 Interpolation limits autocorrelation to intervals of at most two units, but the precise distance is different for different frames.
 Delocalized oscillators with long period have low autocorrelation at intervals beyond 1 unit, but it never quite reaches zero.
 
-Overall delocalized oscillators considerably improve on the state of the art for offline Gaussian animations.
+Overall, delocalized oscillators considerably improve on the state of the art for offline Gaussian animations.
 They represent the normal distribution much more faithfully, and they do so with fluid, natural motion, treating no frames specially.
 
 \section{Future Work}
@@ -807,6 +837,8 @@ First, I am thankful to the National Institute of Standards and Technology, wher
 Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
+This paper is written using the \texttt{knitr} package\cite{knitr}, which enabled me to include the source code for my figures directly in the text.
+All source is available on github: \url{https://github.com/chiphogg/paper_gaussian_oscillators}.
 I am also thankful to Melissa DeLucchi, who provided valuable feedback on a draft of this paper.
 
 \section*{Appendix: efficient online animations}
