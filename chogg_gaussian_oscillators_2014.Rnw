@@ -12,7 +12,7 @@
 
 \title{Visualizing uncertain curves and surfaces via Gaussian Oscillators}
 \author{Charles~R.~Hogg~III}
-\date{August~2014}
+\date{January~2015}
 \maketitle
 
 <<global_setup, cache=FALSE, include=FALSE>>=
@@ -45,7 +45,7 @@ LegendOnly <- function(a.gplot) {
 @
 
 \begin{abstract}
-  We investigate using animations to visualize uncertainty in curves and surfaces.
+  We study animations as tools to visualize Gaussian uncertainty in curves and surfaces.
   First, we define the \textit{Gaussian oscillator}, a unifying concept which encompasses existing and future approaches.
   We then develop a new technique, the \textit{delocalized oscillator}, which combines the best traits of previous ones: these animations feature fluid, natural motion, and also better represent the underlying distribution.
   We propose the first metric to judge animation techniques by the quality of individual animations (rather than the entire population): the Kolmogorov-Smirnov distribution.
@@ -110,18 +110,26 @@ interp.matrix.functions <- list(Linear=InterpLinear,
                                 Spline=InterpSpline,
                                 Trigonometric=InterpTrig)
 
-p.concept <- InterpolationConceptPlot(
-    interp.matrix.functions=interp.matrix.functions,
-    n.points=num.points,
-    n.keyframes=num.keyframes,
-    size=line.size)
-p.interp <- InterpolationQuantilePlot(
-    interp.matrix.functions=interp.matrix.functions,
-    quantiles=quantiles,
-    n.draws=num.interpolated.curves,
-    n.points=num.points,
-    n.keyframes=num.keyframes,
-    size=line.size)
+p.concept <- (
+    InterpolationConceptPlot(
+        interp.matrix.functions=interp.matrix.functions,
+        n.points=num.points,
+        n.keyframes=num.keyframes,
+        size=line.size)
+    + scale_x_continuous('Time')
+    + scale_y_continuous('Value')
+    )
+p.interp <- (
+    InterpolationQuantilePlot(
+        interp.matrix.functions=interp.matrix.functions,
+        quantiles=quantiles,
+        n.draws=num.interpolated.curves,
+        n.points=num.points,
+        n.keyframes=num.keyframes,
+        size=line.size)
+    + scale_x_continuous('Time')
+    + scale_y_continuous('Value')
+    )
 @
 
 <<interpolation, echo=FALSE, fig.cap=interpolation.caption>>=
@@ -134,7 +142,7 @@ Unfortunately, interpolation can easily yield incorrect statistics between the k
 In particular, the variance is usually underestimated.
 Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach\cite{esg1997,skilling1992} correctly preserves statistical properties between keyframes.
 
-An important alternative was pioneered by Hennig\cite{hennig-tr-is-8}, who generated marginally normal great-circle orbits through parameter space.
+A creative alternative was pioneered by Hennig\cite{hennig-tr-is-8}, who generated marginally normal great-circle orbits through parameter space.
 The starting point is a random draw from the multivariate Gaussian.
 Motion begins in the direction of a second random draw, and is constrained so that the particle's distance from the origin is constant.
 Since no point on a circle is special, every frame in these circular timetraces is fully equivalent to every other.
@@ -344,7 +352,7 @@ Great circle animations\cite{hennig-tr-is-8} violate this assumption, so we must
 Great circle animations are very similar to the $N = 2$ case of delocalized oscillators ($\text{DO}_2$ for short).
 Both techniques require $2d$ random variables to visualize a $d$-dimensional Gaussian, and both techniques produce orbits which are confined to a (randomly-oriented) plane.
 In fact, great circle animation is a subset of measure zero of the $\text{DO}_2$ family: the former always produces circles, but the latter can also produce ellipses.
-Therefore, we assume that our results for $\text{DO}_2$ animations are a useful heuristic for the quality of the great circle animations, unless stated otherwise.\footnote{
+Therefore, we assume that our results for $\text{DO}_2$ animations are a useful heuristic for the quality of the great circle animations.\footnote{
   Basically, this assumption amounts to ignoring the fact that the dimensions of a great circle animation are not independent.
 }
 
@@ -355,15 +363,17 @@ How well does an animation technique represent the Gaussian distribution?
 This question has two possible meanings, but previous literature has only considered one.
 
 So far, people have taken this question to refer to a \textit{family} of animations.
-Specifically, they have constructed techniques such that the distribution of all animations is marginally Gaussian at each individual time.
+Specifically, each family's distribution at each individual time is marginally Gaussian.
 This interpretation is certainly important, which is why we built it in to the definition of the Gaussian oscillator (Equation \ref{eqn:go_marginal}).
 
-However, the properties of \textit{individual} animations are even more important; after all, visualizations contain only a single animation.
-We can take the frames of an animation to define a probability distribution, which we can also compare to the Gaussian.
+However, the properties of \textit{individual} animations are even more important.
+(After all, a typical visualization contains only a single animation, not a family of them.)
+The frames of an individual animation define a probability distribution.
+The closer this distribution approximates the standard Gaussian, the better the technique.
 
-To see this distinction starkly, consider the simplest Gaussian oscillator: a single Gaussian draw, constant for all time.
-The marginal distribution over all such oscillators is clearly the standard Gaussian at all times.
-But the marginal distribution for a \textit{single} oscillator is a point mass, which is very different from a Gaussian.
+To illustrate the distinction between family and individual, consider the simplest Gaussian oscillator: a single Gaussian draw, constant for all time.
+The marginal distribution over this family is clearly the standard Gaussian at all times.
+But the marginal distribution for a \textit{single} animation is a point mass, which is very different from a Gaussian.
 
 <<ks_data, include=FALSE>>=
 # The number of Gaussian oscillators of each type to construct.  Increasing
@@ -392,7 +402,9 @@ for (i in 1:num_reps) {
                       function(num) {
                         KsOnColumns(RandomNormals(num, num_per_rep))
                       })
-  system(sprintf('touch progress_indep_%d', i))
+  if (!draft_mode) {
+    system(sprintf('touch progress_indep_%d', i))
+  }
   if (exists('ks.independent') && length(ks.independent) > 0) {
     ks.independent <- mapply(c, ks.independent, new_draws, SIMPLIFY=FALSE)
   } else {
@@ -417,7 +429,9 @@ KsForMethod <- function(matrix.function, label='none') {
   remove('ks')
   for (i in 1:num_reps) {
     new_draws <- lapply(equivalent_draws, FUN)
-    system(sprintf('touch progress_%s_%d', label, i))
+    if (!draft_mode) {
+      system(sprintf('touch progress_%s_%d', label, i))
+    }
     if (exists('ks') && length(ks) > 0) {
       ks <- mapply(c, ks, new_draws, SIMPLIFY=FALSE)
     } else {
@@ -459,9 +473,9 @@ ks.figure.caption <- sprintf(
     equivalent_draws[3])
 @
 
-This motivates us to evaluate each family of Gaussian oscillators according to how faithfully its individual members represent the standard Gaussian distribution.
+This motivates the following two-pronged approach: first, measure how well an individual animation represents the Gaussian; second, compute the \textit{distribution} of this metric across all animations in the family.
 The Kolmogorov-Smirnov (KS) statistic --- essentially, the widest vertical gap between two cumulative distribution functions --- is a convenient, widely-used technique to compare two distributions.
-The KS \textit{distribution} summarizes the fidelity of a Gaussian oscillator \textit{family}: distributions which tend toward smaller values indicate more faithful families.\footnote{
+The KS \textit{distribution} summarizes the fidelity of a Gaussian oscillator \textit{family}: distributions which tend toward smaller values indicate better techniques.\footnote{
   Of course, we could compute distributions for any other metric which compares probability distributions.
   The KS metric is not special; we chose it because it is both simple and widely used.
 }
@@ -603,7 +617,6 @@ This makes the acceleration effectively infinite there.
 At every keyframe, the oscillator receives an ``impulse,'' which distractingly changes its motion.
 By contrast, the delocalized oscillators' motion is perfectly fluid.
 Each time is statistically equivalent to each other time --- not just for the oscillator's position, but for its velocity and acceleration too.
-The keyframes are not special, because they do not exist.
 
 To understand these different behaviours, we view these oscillators as Gaussian processes, and compare their covariance functions $k(t_1, t_2)$.
 Delocalized oscillators have a \textit{stationary} covariance (Equation \ref{eqn:do_covariance}): it depends only on $(t_2 - t_1)$, not on $t_1$ or $t_2$ individually.
@@ -837,8 +850,8 @@ First, I am thankful to the National Institute of Standards and Technology, wher
 Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
-This paper is written using the \texttt{knitr} package\cite{knitr}, which enabled me to include the source code for my figures directly in the text.
-All source is available on github: \url{https://github.com/chiphogg/paper_gaussian_oscillators}.
+This paper is written using the \texttt{knitr} package\cite{knitr}, which enabled me to include the \texttt{R} source code to generate my figures directly in the source text.
+This source is available on github: \url{https://github.com/chiphogg/paper_gaussian_oscillators}.
 I am also thankful to Melissa DeLucchi, who provided valuable feedback on a draft of this paper.
 
 \section*{Appendix: efficient online animations}
@@ -962,7 +975,3 @@ And if we furthermore evaluate that oscillator only at constant time intervals, 
 \bibliographystyle{plain}
 \bibliography{biblio}
 \end{document}
-
-Ideas which need a home
-
-(Looping vs. non-looping)
