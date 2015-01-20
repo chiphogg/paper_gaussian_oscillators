@@ -323,7 +323,9 @@ It produces periodic timetraces, with period $N$.
 Note that $\xi(t)$ is only defined for even $N$, since every $\sin(\cdot)$ needs a corresponding $\cos(\cdot)$.
 Considering the application, this restriction seems mild.
 
-To verify that $\xi(t)$ is a Gaussian oscillator, the relations $\langle \epsilon_i \rangle = 0$ and $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$ will be useful.
+To verify that $\xi(t)$ is a Gaussian oscillator, the relations $\langle \epsilon_i \rangle = 0$ and $\langle \epsilon_i \epsilon_j \rangle = \delta_{ij}$\footnote{
+  $\delta_{ij}$ is the Kronecker delta symbol, which is 1 when $i = j$ and 0 otherwise.
+} will be useful.
 First, note that $\xi(t)$ is a sum of Gaussian random variables at each time $t$; therefore, $\xi(t)$ also has a Gaussian distribution.
 This means that its mean $\langle \xi(t) \rangle$ and covariance $\langle \xi(t_1) \xi(t_2) \rangle$ characterize it completely.
 
@@ -720,7 +722,7 @@ In the worst case, the two values at $\Delta t = \pm \frac{1}{2}$ relative to a 
 The unit-time autocorrelation for delocalized oscillators is
 \begin{equation}
   \langle \xi(t) \xi(t + 1) \rangle = \frac{2}{N} \sum\limits_{i=1}^{N/2} \cos
-  \left( \frac{2 \pi i}{N} \right) = \frac{2}{N}.
+  \left( \frac{2 \pi i}{N} \right) = -\frac{2}{N}.
 \end{equation}
 Thus, delocalized oscillators are slightly anticorrelated at single-unit intervals\footnote{
 This is valid at all times, since unlike interpolated animation, the delocalized oscillators are stationary.}.
@@ -853,7 +855,7 @@ Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of
 
 This paper is written using the \texttt{knitr} package\cite{knitr}, which enabled me to include the \texttt{R} source code to generate my figures directly in the source text.
 This source is available on github: \url{https://github.com/chiphogg/paper_gaussian_oscillators}.
-I am also thankful to Melissa DeLucchi, who provided valuable feedback on a draft of this paper.
+I am also thankful to Melissa DeLucchi and Yang Feng, who provided valuable feedback on a draft of this paper.
 
 \section*{Appendix: efficient online animations}
 \label{sec:appendix_efficient_online_animations}
