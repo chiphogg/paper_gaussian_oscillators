@@ -101,9 +101,10 @@ interpolation.caption <- sprintf(
     paste("Interpolation illustrated for a standard 1-D Gaussian.",
           "(a) A single set of normal draws interpolated by three methods.",
           "It is not obvious from this figure which of these methods, if any, is best.",
-          "(b) Pointwise quantiles for interpolating %s sets of random draws.",
+          "(b) Pointwise quantiles (%s) for interpolating %s sets of random draws.",
           "These show that linear and spline interpolation are unacceptable, because the population statistics are different between the keyframes.",
           "Only trigonometric interpolation yields the same marginal distribution at all times."),
+    paste(collapse=", ", c(head(quantiles, -1), paste('and', tail(quantiles, 1)))),
     formatC(num.interpolated.curves, big.mark=',', format='fg'))
 
 interp.matrix.functions <- list(Linear=InterpLinear,
