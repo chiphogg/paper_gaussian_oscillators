@@ -1,0 +1,103 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plain Cover Letter
+% LaTeX Template
+% Version 1.0 (28/5/13)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Rensselaer Polytechnic Institute 
+% http://www.rpi.edu/dept/arc/training/latex/resumes/
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[11pt]{letter} % Default font size of the document, change to 10pt to fit more text
+
+\usepackage{newcent} % Default font is the New Century Schoolbook PostScript font 
+%\usepackage{helvet} % Uncomment this (while commenting the above line) to use the Helvetica font
+
+% Margins
+\topmargin=-1in % Moves the top of the document 1 inch above the default
+\textheight=8.5in % Total height of the text on the page before text goes on to the next page, this can be increased in a longer letter
+\oddsidemargin=-10pt % Position of the left margin, can be negative or positive if you want more or less room
+\textwidth=6.5in % Total width of the text, increase this if the left margin was decreased and vice-versa
+
+\let\raggedleft\raggedright % Pushes the date (at the top) to the left, comment this line to have the date on the right
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	ADDRESSEE SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{letter}{%
+    Thomas~C.~M.~Lee \\
+    Department of Statistics \\
+    University of California, Davis  \\
+    4118 Math Sci Bldg, One Shields Ave  \\
+    Davis, CA 95616
+}
+
+%----------------------------------------------------------------------------------------
+%	YOUR NAME & ADDRESS SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{center}
+\large\bf Dr.~Charles~R.~Hogg~III \\ % Your name
+%\vspace{20pt} \hrule height 1pt % If you would like a horizontal line separating the name from the address, uncomment the line to the left of this text
+Google, Inc. \\ 6425 Penn Avenue \#700 \\ Pittsburgh, PA 15206 \\ (412) 449-9111 % Your address and phone number
+\\ \texttt{chogg@google.com}
+\end{center} 
+\vfill
+
+\signature{Charles~R.~Hogg~III} % Your name for the signature at the bottom
+
+%----------------------------------------------------------------------------------------
+%	LETTER CONTENT SECTION
+%----------------------------------------------------------------------------------------
+
+\opening{Dear Dr.~Lee,} 
+
+I wish to submit the attached paper, ``Visualizing uncertain curves and surfaces via Gaussian Oscillators,'' for consideration to be published in the \textit{Journal of Computational and Graphical Statistics}.
+The paper contains 5 figures, 5862 words, and no tables.
+A great many papers published in this journal deal with curves or surfaces which have uncertainty (for instance, papers on topics such as regression or Gaussian Processes).
+This uncertainty is highly challenging to visualize, but my paper presents several advancements.
+Therefore, I believe it will be of great interest to this journal's readership.
+
+The paper contains several novel and useful results, of which I emphasize the following.
+It is the first paper to investigate the statistical properties of \textit{individual} animations, rather than \textit{populations} of animations.
+(This is critically important, since real visualizations typically contain only a single animation.)
+It also introduces a novel animation technique, whose motion is more fluid and natural, and whose animation frames are all on equal footing (no special ``keyframes'' are singled out).
+Finally, it paves the way for future developments, by identifying these animations as a special class of Gaussian Process (which I have called ``Gaussian oscillators'' for ease of reference).
+
+Allow me to suggest several reviewers who I expect will find my work useful, and who will be able to critique it in detail.
+Philipp Hennig (\texttt{phennig@tuebingen.mpg.de}) has used animations to teach Gaussian Processes in summer and winter school sessions since 2013.
+John Skilling (\texttt{skilling@eircom.net}) developed the first statistically correct animation technique in 1991.
+Charles Ehlschlaeger (\texttt{ehlschl1@illinois.edu}), Ashton Shortridge (\texttt{ashton@msu.edu}), and Michael Goodchild (\texttt{good@geog.ucsb.edu}) applied Dr. Skilling's technique to elevation data in a highly cited paper from 1997.
+
+I confirm that this manuscript has been submitted solely to the journal and that it is not published, in press, or submitted elsewhere.
+I confirm that this research complies with all relevant ethical guidelines and legal requirements.
+I confirm that I have prepared the complete text of the paper, that I am the sole author, and that I have seen, read, and understood your guidelines on copyright.
+Finally, I confirm that I have no conflict of interest.
+
+Thank you very much for your time and consideration.
+I look forward to hearing back from you.
+
+\closing{Sincerely yours,}
+
+
+%\encl{Curriculum vitae, employment form} % List your enclosed documents here, comment this out to get rid of the "encl:"
+
+%----------------------------------------------------------------------------------------
+
+\end{letter}
+
+\end{document}
