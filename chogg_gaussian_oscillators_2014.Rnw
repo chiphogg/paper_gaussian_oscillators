@@ -102,13 +102,13 @@ Animations avoid this difficulty, because they never show more than one surface 
 
 This paper focuses on curves and surfaces whose underlying distribution is Gaussian.
 This is not nearly as restrictive as it might seem.
-It includes Gaussian processes\cite{3569}, a flexible nonparametric class of models.
+It includes Gaussian processes \citep{3569}, a flexible nonparametric class of models.
 Furthermore, parametric models often have a single posterior mode, which is Gaussian to leading order.
 Continuous paths through the Gaussian parameter space correspond to continuous animations of the function those parameters govern.
 
 The literature contains two main approaches so far.
 
-Historically, most animations have been based on \textit{interpolation}\cite{skilling1992,esg1997}.
+Historically, most animations have been based on \textit{interpolation} \citep{skilling1992,esg1997}.
 A series of independent draws from the Gaussian are generated and displayed at regular time intervals; these are called the \textit{keyframes}.
 The frames at intervening times are weighted averages of the nearest two keyframes.
 The weighting favours the first keyframe at the beginning of the interval, and the second keyframe near the end, so that the curve or surface changes continuously from one keyframe to the next.
@@ -163,9 +163,9 @@ grid.arrange(p.concept + scale_colour_brewer('', palette='Set2'),
 
 Unfortunately, interpolation can easily yield incorrect statistics between the keyframes.
 In particular, the variance is usually underestimated.
-Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach\cite{esg1997,skilling1992} correctly preserves statistical properties between keyframes.
+Figure \ref{fig:interpolation}(b) shows that only the trigonometric approach \citep{esg1997,skilling1992} correctly preserves statistical properties between keyframes.
 
-A creative alternative was pioneered by Hennig\cite{hennig-tr-is-8}, who generated marginally normal great-circle orbits through parameter space.
+A creative alternative was pioneered by Hennig \citep{hennig-tr-is-8}, who generated marginally normal great-circle orbits through parameter space.
 The starting point is a random draw from the multivariate Gaussian.
 Motion begins in the direction of a second random draw, and is constrained so that the particle's distance from the origin is constant.
 Since no point on a circle is special, every frame in these circular timetraces is fully equivalent to every other.
@@ -175,7 +175,7 @@ Each approach has advantages and weaknesses.
 Interpolation is flexible: it can incorporate arbitrarily many independent draws, yielding paths which better represent the Normal distribution.
 The downside is that not all frames are equivalent: keyframes have preferred status, and the motion changes discontinuously there, which is distracting.
 
-Great circle animations\cite{hennig-tr-is-8} do not have this defect; they treat all frames equally in every way.
+Great circle animations \citep{hennig-tr-is-8} do not have this defect; they treat all frames equally in every way.
 They also represent the normal distribution more faithfully than interpolated animations for the same number of samples, as Section \ref{sub:statistical_properties} will elaborate.
 Their shortcoming is that they cannot incorporate more than two samples; therefore, they can only visualize a small part of the distribution.
 
@@ -218,11 +218,11 @@ However, the oscillators are not independent, since the $m$-dimensional vector i
 \subsection{Connection with Gaussian processes}
 \label{sub:connection_with_gaussian_processes}
 
-Readers familiar with the concept may have noticed that Gaussian oscillators are also Gaussian \textit{processes}\cite{3569}, with a few constraints.
+Readers familiar with the concept may have noticed that Gaussian oscillators are also Gaussian \textit{processes} \citep{3569}, with a few constraints.
 Specifically, the mean function $\mu(t)$ is zero everywhere, and the covariance function $k(t, t')$ is 1 when $t = t'$ (and continuous in that neighbourhood).
 
 Remarkably, nobody seems to have pointed out this connection before.
-It is extremely useful, since future Gaussian animation research can leverage the well-studied menagerie of covariance functions\cite{3569}.
+It is extremely useful, since future Gaussian animation research can leverage the well-studied menagerie of covariance functions \citep{3569}.
 
 There is some danger of confusion here, because often the curves and surfaces being animated are also modeled using Gaussian processes.
 The difference is that the Gaussian oscillator is a \textit{time-}domain Gaussian process, while the curve or surface lives in the \textit{space} domain\footnote{
@@ -372,7 +372,7 @@ Note too that $\langle \xi(t)^2 \rangle = 1 \,\,\,\, \forall t$, as required for
 
 This section introduces criteria to judge the quality of each type of Gaussian oscillator.
 We will assume throughout that the animation is composed of independent Gaussian oscillators, which is usually the case.
-Great circle animations\cite{hennig-tr-is-8} violate this assumption, so we must begin by clarifying their role.
+Great circle animations \citep{hennig-tr-is-8} violate this assumption, so we must begin by clarifying their role.
 
 Great circle animations are very similar to the $N = 2$ case of delocalized oscillators ($\text{DO}_2$ for short).
 Both techniques require $2d$ random variables to visualize a $d$-dimensional Gaussian, and both techniques produce orbits which are confined to a (randomly-oriented) plane.
@@ -818,8 +818,8 @@ And the total probability mass of each mode can be indicated beside its animatio
 
 Discrete distributions present a greater challenge: obviously, they cannot be represented by continuous animations.
 However, even here there are special cases which admit partial success.
-Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve\cite{hklm2010}).
-If we perform an Anscombe transform\cite{anscombe1948}, the transformed data follows the Gaussian distribution to an excellent approximation.
+Consider a Poisson distribution (representing, e.g., neutron counts in a scattering curve \citep{hklm2010}).
+If we perform an Anscombe transform \citep{anscombe1948}, the transformed data follows the Gaussian distribution to an excellent approximation.
 One could animate the transformed distribution with Gaussian oscillators, ``un-transform'' the result, and round to the nearest integer.
 While the result would not be truly continuous, it would change in an ordered way which is easy for the eye to follow.
 
@@ -846,7 +846,7 @@ For example, consider this piecewise polynomial covariance function:
   \end{cases}
 \end{equation}
 where $\tau$ is the time interval magnitude $|t_2 - t_1|$.
-Curves sampled from this distribution are twice differentiable everywhere\cite{3569}; hence, their motion will be smooth and natural.
+Curves sampled from this distribution are twice differentiable everywhere \citep{3569}; hence, their motion will be smooth and natural.
 Their autocorrelation completely vanishes at all intervals longer than one unit: the best possible result.
 The covariance is stationary, so no frames can be special in any way.
 Finally, they permit infinite non-repeating animations with finite resources\footnote{
@@ -854,7 +854,7 @@ Finally, they permit infinite non-repeating animations with finite resources\foo
 }, just as interpolation does.
 
 This, then, is the bright future we envision for animated uncertainty visualization.
-\texttt{R} packages which output interactive web apps, such as \texttt{shiny}\cite{shiny}, can be augmented to support animated output.
+\texttt{R} packages which output interactive web apps, such as \texttt{shiny} \citep{shiny}, can be augmented to support animated output.
 Rather than a static image, or a finite looping \texttt{.gif}, the curve continuously moves in a smooth and natural way: never repeating its position, and visualizing more and more of the distribution.
 
 \section{Conclusions}
@@ -875,7 +875,7 @@ First, I am thankful to the National Institute of Standards and Technology, wher
 Bob McMichael greatly expanded the utility of this work by pointing out that it applies to parametric models, not just Gaussian processes.
 Finally, Yarin Gal introduced me to the delightful and mesmerizing animations of Philipp Hennig.
 
-This paper is written using the \texttt{knitr} package\cite{knitr}, which enabled me to include the \texttt{R} source code to generate my figures directly in the source text.
+This paper is written using the \texttt{knitr} package \citep{knitr}, which enabled me to include the \texttt{R} source code to generate my figures directly in the source text.
 This source is available on github: \url{https://github.com/chiphogg/paper_gaussian_oscillators}.
 I am also thankful to Melissa DeLucchi and Yang Feng, who provided valuable feedback on a draft of this paper.
 
@@ -997,6 +997,6 @@ To summarize: extending an $n$-point Gaussian oscillator timetrace is generally 
 But if the Gaussian oscillator has compact support, both costs drop to $\order(m^2)$ (where $m$ is small and constant).
 And if we furthermore evaluate that oscillator only at constant time intervals, all costs drop further to $\order(m)$.
 
-\bibliographystyle{plain}
+\bibliographystyle{apalike}
 \bibliography{biblio}
 \end{document}
